@@ -29,4 +29,5 @@ def creer_analyse(demande: AnalyseRequest):
 def get_analyse(patient_id: str):
     if patient_id in db_analyses:
         return db_analyses[patient_id]
-    return {"error": "Analyse non trouvée"}
+    return {"error": "Analyse non trouvée"} 
+       # 🚀 Test du trigger automatique sur la nouvelle API !
