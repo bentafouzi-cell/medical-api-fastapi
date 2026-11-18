@@ -34,6 +34,12 @@ def creer_analyse(demande: schemas.AnalyseRequest, db: Session = Depends(get_db)
     
     return {"patient_id": nouvelle_analyse.patient_id, "resultat": nouvelle_analyse.message, "statut": nouvelle_analyse.statut}
 
+@router.get("/toutes")
+def lister_analyses(db: Session = Depends(get_db)):
+    # On récupère toutes les analyses, de la plus récente à la plus ancienne
+    analyses = db.query(models.AnalyseDB).order_by(models.AnalyseDB.id.desc()).all()
+    return analyses
+
 @router.get("/{patient_id}")
 def get_analyse(patient_id: str, db: Session = Depends(get_db)):
     analyse = db.query(models.AnalyseDB).filter(models.AnalyseDB.patient_id == patient_id).first()
@@ -45,9 +51,3 @@ def get_analyse(patient_id: str, db: Session = Depends(get_db)):
         "statut": analyse.statut,
         "message": analyse.message
     }
-
-@router.get("/toutes")
-def lister_analyses(db: Session = Depends(get_db)):
-    # On récupère toutes les analyses, de la plus récente à la plus ancienne
-    analyses = db.query(models.AnalyseDB).order_by(models.AnalyseDB.id.desc()).all()
-    return analyses
