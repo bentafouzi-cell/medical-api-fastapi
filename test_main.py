@@ -1,6 +1,7 @@
 import os
 from fastapi.testclient import TestClient
-from main import app, Base, engine
+from app.main import app
+from app.database import Base, engine
 
 # Forcer l'application à utiliser la base de données de test
 os.environ["TESTING"] = "True"
