@@ -46,7 +46,7 @@ def get_analyse(patient_id: str, db: Session = Depends(get_db)):
         "message": analyse.message
     }
 
-@router.get("/")
+@router.get("/toutes")
 def lister_analyses(db: Session = Depends(get_db)):
     # On récupère toutes les analyses, de la plus récente à la plus ancienne
     analyses = db.query(models.AnalyseDB).order_by(models.AnalyseDB.id.desc()).all()
