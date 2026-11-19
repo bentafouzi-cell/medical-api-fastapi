@@ -8,3 +8,7 @@ class AnalyseResponse(BaseModel):
     patient_id: str
     resultat: str
     statut: str
+
+class UserCreate(BaseModel):
+    email: str
+    password: str

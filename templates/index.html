@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MedicLab - Tableau de bord</title>
-    <!-- On utilise Bootstrap pour un design propre sans écrire trop de CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background-color: #f4f6f9; }
@@ -14,16 +13,15 @@
 </head>
 <body>
 
-    <!-- Barre de navigation -->
     <nav class="navbar navbar-dark mb-4">
         <div class="container">
             <span class="navbar-brand mb-0 h1">🏥 MedicLab SaaS</span>
+            <a href="/login" class="btn btn-outline-light btn-sm" onclick="localStorage.removeItem('token')">Déconnexion</a>
         </div>
     </nav>
 
     <div class="container">
         <div class="row">
-            <!-- Formulaire pour ajouter une analyse -->
             <div class="col-md-4 mb-4">
                 <div class="card">
                     <div class="card-header bg-primary text-white">
@@ -51,7 +49,6 @@
                 </div>
             </div>
 
-            <!-- Tableau des analyses -->
             <div class="col-md-8">
                 <div class="card">
                     <div class="card-header bg-secondary text-white">
@@ -67,7 +64,6 @@
                                 </tr>
                             </thead>
                             <tbody id="tableBody">
-                                <!-- Le contenu sera ajouté par JavaScript -->
                                 <tr>
                                     <td colspan="3" class="text-center text-muted">Aucune analyse pour l'instant.</td>
                                 </tr>
@@ -79,15 +75,22 @@
         </div>
     </div>
 
-    <!-- Script JavaScript pour gérer les requêtes vers l'API -->
     <script>
         const apiUrl = window.location.origin + '/api/analyses';
+        const token = localStorage.getItem('token');
 
-        // Fonction pour charger et afficher les analyses
+        if (!token) {
+            window.location.href = '/login';
+        }
+
         async function chargerAnalyses() {
             const tableBody = document.getElementById('tableBody');
             try {
-                const response = await fetch(apiUrl + '/toutes');
+                const response = await fetch(apiUrl + '/toutes', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
                 const analyses = await response.json();
 
                 if (analyses.length === 0) {
@@ -95,7 +98,6 @@
                     return;
                 }
 
-                // On vide le tableau et on ajoute chaque ligne
                 tableBody.innerHTML = '';
                 analyses.forEach(analyse => {
                     const row = `
@@ -112,7 +114,6 @@
             }
         }
 
-        // Gestion de l'envoi du formulaire
         document.getElementById('analyseForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -122,19 +123,20 @@
 
             try {
                 const response = await fetch(apiUrl + '/', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ patient_id: patientId, type_analyse: typeAnalyse })
-});
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ patient_id: patientId, type_analyse: typeAnalyse })
+                });
 
                 const data = await response.json();
 
                 if (response.ok) {
                     messageDiv.innerHTML = `<div class="alert alert-success">Analyse créée avec succès !</div>`;
                     document.getElementById('analyseForm').reset();
-                    // On recharge le tableau pour voir la nouvelle analyse
                     chargerAnalyses();
-                    // On efface le message après 3 secondes
                     setTimeout(() => { messageDiv.innerHTML = ''; }, 3000);
                 } else {
                     messageDiv.innerHTML = `<div class="alert alert-danger">${data.detail}</div>`;
@@ -144,7 +146,6 @@
             }
         });
 
-        // Charger les analyses dès l'ouverture de la page
         document.addEventListener('DOMContentLoaded', chargerAnalyses);
     </script>
 </body>
