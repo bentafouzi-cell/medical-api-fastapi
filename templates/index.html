@@ -121,11 +121,11 @@
             const messageDiv = document.getElementById('message');
 
             try {
-                const response = await fetch(apiUrl + '/toutes'); {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ patient_id: patientId, type_analyse: typeAnalyse })
-                });
+                const response = await fetch(apiUrl + '/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ patient_id: patientId, type_analyse: typeAnalyse })
+});
 
                 const data = await response.json();
 

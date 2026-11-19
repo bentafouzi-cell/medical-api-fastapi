@@ -17,7 +17,7 @@ app.include_router(analyses.router)
 def health_check():
     return {"status": "ok"}
 
-# NOUVELLE ROUTE : Afficher la page d'accueil (le tableau de bord)
+# La route d'accueil affiche juste la page HTML (vide au départ)
 @app.get("/")
 def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
