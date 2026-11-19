@@ -9,12 +9,11 @@ async def envoyer_email_reinitialisation(email_destinataire: str, token: str):
         print("⚠️ BREVO_API_KEY non configurée. Email non envoyé.")
         return False
     
-    # L'URL de ton site sur Render (ou localhost pour les tests)
     base_url = os.getenv("BASE_URL", "http://127.0.0.1:8000")
     lien = f"{base_url}/reset-password?token={token}"
     
     payload = {
-        "sender": {"name": "MedicLab", "email": "noreply@mediclab.ma"},
+        "sender": {"name": "MedicLab", "email": "benta.fouzi@gmail.com"},
         "to": [{"email": email_destinataire}],
         "subject": "Réinitialisation de votre mot de passe",
         "htmlContent": f"""
