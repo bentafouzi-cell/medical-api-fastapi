@@ -1,13 +1,19 @@
 import os
 import requests
 
-BREVO_API_KEY = os.getenv("BREVO_API_KEY", "")
-SENDER_EMAIL = os.getenv("SENDER_EMAIL", "benta.fouzi@gmail.com")
+# 🔍 CORRECTION ICI : Pas de valeur par défaut Gmail. On force l'utilisation de la variable Render.
+BREVO_API_KEY = os.getenv("BREVO_API_KEY")
+SENDER_EMAIL = os.getenv("SENDER_EMAIL") 
 BASE_URL = os.getenv("BASE_URL", "https://medical-api-fastapi.onrender.com")
 
 def envoyer_email_reinitialisation(email_destinataire: str, token: str) -> bool:
+    # Vérification stricte des variables
     if not BREVO_API_KEY:
-        print("⚠️ BREVO_API_KEY non configurée. Email non envoyé.")
+        print("❌ ERREUR CRITIQUE : BREVO_API_KEY est manquante dans Render !")
+        return False
+    
+    if not SENDER_EMAIL:
+        print("❌ ERREUR CRITIQUE : SENDER_EMAIL est manquante dans Render !")
         return False
 
     lien = f"{BASE_URL}/reset-password?token={token}"
@@ -22,6 +28,8 @@ def envoyer_email_reinitialisation(email_destinataire: str, token: str) -> bool:
     """
 
     try:
+        print(f" Tentative d'envoi à {email_destinataire} DEPUIS {SENDER_EMAIL}...")
+        
         response = requests.post(
             "https://api.brevo.com/v3/smtp/email",
             headers={
@@ -37,14 +45,17 @@ def envoyer_email_reinitialisation(email_destinataire: str, token: str) -> bool:
             },
             timeout=15
         )
+        
         print(f"🔍 STATUT BREVO : {response.status_code}")
         print(f"🔍 RÉPONSE BREVO : {response.text}")
+        
         if response.status_code in [200, 201]:
-            print(f"✅ Email envoyé à {email_destinataire}")
+            print(f"✅ Email envoyé avec succès à {email_destinataire}")
             return True
         else:
-            print(f"❌ Erreur d'envoi : {response.status_code} - {response.text}")
+            print(f"❌ ÉCHEC BREVO : {response.status_code} - {response.text}")
             return False
+            
     except Exception as e:
-        print(f"❌ Erreur envoi email : {e}")
+        print(f"❌ EXCEPTION PYTHON : {str(e)}")
         return False

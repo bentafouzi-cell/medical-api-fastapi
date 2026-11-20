@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Depends
+from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -40,4 +40,4 @@ def read_root(request: Request):
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     if exc.status_code == 401:
         return RedirectResponse(url="/login")
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse("error.html", {"request": request, "error": exc.detail})

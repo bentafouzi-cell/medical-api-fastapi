@@ -51,8 +51,11 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
 
 @router.post("/forgot-password")
 async def forgot_password(email: str, db: Session = Depends(get_db)):
+    # On garde la sécurité : on ne dit pas si l'email existe ou non pour éviter le scraping
     user = db.query(models.UserDB).filter(models.UserDB.email == email).first()
+    
     if not user:
+        # Fake success pour la sécurité
         return {"message": "Si cet email existe, un lien de réinitialisation a été envoyé."}
     
     token = secrets.token_urlsafe(32)
@@ -66,7 +69,13 @@ async def forgot_password(email: str, db: Session = Depends(get_db)):
     db.add(reset_token)
     db.commit()
     
-    envoyer_email_reinitialisation(email, token)
+    # 🔍 C'EST ICI QU'ON CORRIGE : On vérifie le résultat
+    succes_envoi = envoyer_email_reinitialisation(email, token)
+    
+    if not succes_envoi:
+        # Si l'envoi échoue, on lance une vraie erreur 500 pour voir dans les logs
+        raise HTTPException(status_code=500, detail="Échec de l'envoi de l'email. Vérifiez la config Brevo (Logs serveur).")
+    
     return {"message": "Si cet email existe, un lien de réinitialisation a été envoyé."}
 
 @router.post("/reset-password")
