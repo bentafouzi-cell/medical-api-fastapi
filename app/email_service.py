@@ -40,10 +40,10 @@ def envoyer_email_reinitialisation(email_destinataire: str, token: str) -> bool:
         print(f"🔍 STATUT BREVO : {response.status_code}")
         print(f"🔍 RÉPONSE BREVO : {response.text}")
         if response.status_code in [200, 201]:
-            print(f"✅ Email de reset envoyé à {email_destinataire}")
+            print(f"✅ Email envoyé à {email_destinataire}")
             return True
         else:
-            print(f"❌ Erreur Brevo {response.status_code} : {response.text}")
+            print(f"❌ Erreur d'envoi : {response.status_code} - {response.text}")
             return False
     except Exception as e:
         print(f"❌ Erreur envoi email : {e}")
