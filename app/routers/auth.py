@@ -66,7 +66,7 @@ async def forgot_password(email: str, db: Session = Depends(get_db)):
     db.add(reset_token)
     db.commit()
     
-    await envoyer_email_reinitialisation(email, token)
+    envoyer_email_reinitialisation(email, token)
     return {"message": "Si cet email existe, un lien de réinitialisation a été envoyé."}
 
 @router.post("/reset-password")
