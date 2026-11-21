@@ -6,6 +6,11 @@ from .database import engine, Base
 from .routers import analyses, auth, patients
 from .auth import get_current_user
 from . import models
+from sqlalchemy import text
+
+with engine.begin() as conn:
+    conn.execute(text("DROP TABLE IF EXISTS analyses CASCADE"))
+    conn.execute(text("DROP TABLE IF EXISTS patients CASCADE"))
 
 Base.metadata.create_all(bind=engine)
 
