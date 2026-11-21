@@ -3,8 +3,13 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta, datetime
 import secrets
-from .. import models, schemas, auth
+
+# Imports explicites depuis le module racine 'auth.py' (pour les mots de passe)
+from ..auth import get_password_hash, verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
+# Imports des modèles et DB
+from .. import models
 from ..database import get_db
+# Import du service email
 from ..email_service import envoyer_email_reinitialisation
 
 router = APIRouter(
@@ -23,7 +28,8 @@ def register_user(email: str, password: str, nom_labo: str, db: Session = Depend
     db.commit()
     db.refresh(nouveau_labo)
 
-    hashed_password = auth.get_password_hash(password)
+    # Utilisation explicite de la fonction importée
+    hashed_password = get_password_hash(password)
     new_user = models.UserDB(email=email, hashed_password=hashed_password, labo_id=nouveau_labo.id)
     db.add(new_user)
     db.commit()
@@ -35,15 +41,15 @@ def register_user(email: str, password: str, nom_labo: str, db: Session = Depend
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(models.UserDB).filter(models.UserDB.email == form_data.username).first()
     
-    if not user or not auth.verify_password(form_data.password, user.hashed_password):
+    if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email ou mot de passe incorrect",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = auth.create_access_token(
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
     
@@ -51,11 +57,13 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
 
 @router.post("/forgot-password")
 async def forgot_password(email: str, db: Session = Depends(get_db)):
-    # On garde la sécurité : on ne dit pas si l'email existe ou non pour éviter le scraping
+    # 🔍 LOG 1 : Entrée dans la route
+    print(f"🚨 [ROUTE] DÉBUT forgot_password pour : {email}")
+
     user = db.query(models.UserDB).filter(models.UserDB.email == email).first()
     
     if not user:
-        # Fake success pour la sécurité
+        print("⚠️ [ROUTE] Utilisateur non trouvé (Sécurité - Fake Success)")
         return {"message": "Si cet email existe, un lien de réinitialisation a été envoyé."}
     
     token = secrets.token_urlsafe(32)
@@ -69,14 +77,25 @@ async def forgot_password(email: str, db: Session = Depends(get_db)):
     db.add(reset_token)
     db.commit()
     
-    # 🔍 C'EST ICI QU'ON CORRIGE : On vérifie le résultat
-    succes_envoi = envoyer_email_reinitialisation(email, token)
+    # 🔍 LOG 2 : Appel de la fonction email
+    print("🚀 [ROUTE] Appel de envoyer_email_reinitialisation MAINTENANT...")
     
-    if not succes_envoi:
-        # Si l'envoi échoue, on lance une vraie erreur 500 pour voir dans les logs
-        raise HTTPException(status_code=500, detail="Échec de l'envoi de l'email. Vérifiez la config Brevo (Logs serveur).")
-    
-    return {"message": "Si cet email existe, un lien de réinitialisation a été envoyé."}
+    try:
+        succes_envoi = envoyer_email_reinitialisation(email, token)
+        
+        #  LOG 3 : Affichage du résultat exact
+        print(f"🔍 [ROUTE] RÉSULTAT REÇU DE LA FONCTION : {succes_envoi} (Type: {type(succes_envoi)})")
+        
+        if not succes_envoi:
+            print("❌ [ROUTE] ÉCHEC DÉTECTÉ -> Levée erreur 500")
+            raise HTTPException(status_code=500, detail="Échec de l'envoi de l'email. Vérifiez les logs serveur (Brevo).")
+            
+        print("✅ [ROUTE] SUCCÈS CONFIRMÉ -> Retour 200 OK")
+        return {"message": "Si cet email existe, un lien de réinitialisation a été envoyé."}
+        
+    except Exception as e:
+        print(f"💥 [ROUTE] EXCEPTION IMPRÉVUE : {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur interne serveur : {str(e)}")
 
 @router.post("/reset-password")
 def reset_password(token: str, new_password: str, db: Session = Depends(get_db)):
@@ -92,7 +111,8 @@ def reset_password(token: str, new_password: str, db: Session = Depends(get_db))
     if not user:
         raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
     
-    user.hashed_password = auth.get_password_hash(new_password)
+    # Utilisation explicite de la fonction importée
+    user.hashed_password = get_password_hash(new_password)
     reset_entry.used = True
     db.commit()
     
