@@ -1,21 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from datetime import timedelta, datetime
 import secrets
-
-# Imports explicites depuis le module racine 'auth.py' (pour les mots de passe)
 from ..auth import get_password_hash, verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
-# Imports des modèles et DB
 from .. import models
 from ..database import get_db
-# Import du service email
 from ..email_service import envoyer_email_reinitialisation
 
-router = APIRouter(
-    prefix="/api/auth",
-    tags=["Authentification"]
-)
+router = APIRouter(prefix="/api/auth", tags=["Authentification"])
 
 @router.post("/register")
 def register_user(email: str, password: str, nom_labo: str, db: Session = Depends(get_db)):
@@ -28,7 +22,6 @@ def register_user(email: str, password: str, nom_labo: str, db: Session = Depend
     db.commit()
     db.refresh(nouveau_labo)
 
-    # Utilisation explicite de la fonction importée
     hashed_password = get_password_hash(password)
     new_user = models.UserDB(email=email, hashed_password=hashed_password, labo_id=nouveau_labo.id)
     db.add(new_user)
@@ -49,15 +42,20 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
         )
     
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
-    )
+    access_token = create_access_token(data={"sub": user.email}, expires_delta=access_token_expires)
     
-    return {"access_token": access_token, "token_type": "bearer"}
+    response = RedirectResponse(url="/", status_code=302)
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        max_age=60 * 30,
+        path="/"
+    )
+    return response
 
 @router.post("/forgot-password")
 async def forgot_password(email: str, db: Session = Depends(get_db)):
-    # 🔍 LOG 1 : Entrée dans la route
     print(f"🚨 [ROUTE] DÉBUT forgot_password pour : {email}")
 
     user = db.query(models.UserDB).filter(models.UserDB.email == email).first()
@@ -69,21 +67,14 @@ async def forgot_password(email: str, db: Session = Depends(get_db)):
     token = secrets.token_urlsafe(32)
     expires_at = datetime.utcnow() + timedelta(minutes=15)
     
-    reset_token = models.PasswordResetToken(
-        token=token,
-        user_id=user.id,
-        expires_at=expires_at
-    )
+    reset_token = models.PasswordResetToken(token=token, user_id=user.id, expires_at=expires_at)
     db.add(reset_token)
     db.commit()
     
-    # 🔍 LOG 2 : Appel de la fonction email
     print("🚀 [ROUTE] Appel de envoyer_email_reinitialisation MAINTENANT...")
     
     try:
         succes_envoi = envoyer_email_reinitialisation(email, token)
-        
-        #  LOG 3 : Affichage du résultat exact
         print(f"🔍 [ROUTE] RÉSULTAT REÇU DE LA FONCTION : {succes_envoi} (Type: {type(succes_envoi)})")
         
         if not succes_envoi:
@@ -111,7 +102,6 @@ def reset_password(token: str, new_password: str, db: Session = Depends(get_db))
     if not user:
         raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
     
-    # Utilisation explicite de la fonction importée
     user.hashed_password = get_password_hash(new_password)
     reset_entry.used = True
     db.commit()

@@ -8,13 +8,11 @@ from .routers import analyses, auth, patients
 from .auth import get_current_user
 from . import models
 
-# Création automatique des tables si elles n'existent pas
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="API Analyse Médicale SaaS")
 templates = Jinja2Templates(directory="templates")
 
-# Inclusion des routeurs
 app.include_router(analyses.router)
 app.include_router(auth.router)
 app.include_router(patients.router)
@@ -41,10 +39,7 @@ def patients_page(request: Request):
 
 @app.get("/")
 def read_root(request: Request, db: Session = Depends(get_db), current_user: models.UserDB = Depends(get_current_user)):
-    # Récupérer les patients du labo connecté pour la liste déroulante
     patients_list = db.query(models.Patient).filter(models.Patient.labo_id == current_user.labo_id).all()
-    
-    # Récupérer les analyses existantes du labo connecté, triées par date décroissante
     analyses_list = db.query(models.AnalyseDB).filter(models.AnalyseDB.labo_id == current_user.labo_id).order_by(models.AnalyseDB.created_at.desc()).all()
     
     return templates.TemplateResponse("index.html", {
