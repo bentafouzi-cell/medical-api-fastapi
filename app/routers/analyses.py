@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Form, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import Optional
 from .. import models
 from ..database import get_db
 from ..auth import get_current_user
@@ -13,8 +13,7 @@ def create_analyse(
     request: Request,
     patient_id: str = Form(...), 
     type_analyse: str = Form(...),
-    # Champs dynamiques pour les résultats (reçus comme listes depuis le form JS)
-    result_names: Optional[str] = Form(None), # JSON string ou liste séparée par |
+    result_names: Optional[str] = Form(None),
     result_values: Optional[str] = Form(None),
     result_units: Optional[str] = Form(None),
     result_mins: Optional[str] = Form(None),
@@ -33,20 +32,19 @@ def create_analyse(
     ).first()
     
     if not patient:
-        raise HTTPException(status_code=404, detail="Patient non trouvé")
+        raise HTTPException(status_code=404, detail="Patient non trouvé ou non autorisé")
 
-    # Création de l'analyse
     nouvelle_analyse = models.AnalyseDB(
         patient_id=p_id,
         type_analyse=type_analyse,
         statut="En cours",
         labo_id=current_user.labo_id
     )
+    
     db.add(nouvelle_analyse)
     db.commit()
     db.refresh(nouvelle_analyse)
 
-    # Traitement des résultats si présents
     if result_names and result_values:
         names = result_names.split('||')
         values = result_values.split('||')
@@ -55,7 +53,7 @@ def create_analyse(
         maxs = result_maxs.split('||') if result_maxs else []
 
         for i, name in enumerate(names):
-            if name and values[i]:
+            if name and i < len(values) and values[i]:
                 res = models.Resultat(
                     analyse_id=nouvelle_analyse.id,
                     nom_test=name.strip(),
@@ -69,7 +67,9 @@ def create_analyse(
         db.commit()
 
     return RedirectResponse(url="/", status_code=303)
-    @router.get("/detail/{analyse_id}")
+
+
+@router.get("/detail/{analyse_id}")
 def get_analyse_detail(
     analyse_id: int,
     db: Session = Depends(get_db),
