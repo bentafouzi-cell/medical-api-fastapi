@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Form, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
+from typing import List, Optional
 from .. import models
 from ..database import get_db
 from ..auth import get_current_user
@@ -11,47 +12,60 @@ router = APIRouter(prefix="/api/analyses", tags=["Analyses"])
 def create_analyse(
     request: Request,
     patient_id: str = Form(...), 
-    type_analyse: str = Form(...), 
+    type_analyse: str = Form(...),
+    # Champs dynamiques pour les résultats (reçus comme listes depuis le form JS)
+    result_names: Optional[str] = Form(None), # JSON string ou liste séparée par |
+    result_values: Optional[str] = Form(None),
+    result_units: Optional[str] = Form(None),
+    result_mins: Optional[str] = Form(None),
+    result_maxs: Optional[str] = Form(None),
     db: Session = Depends(get_db), 
     current_user: models.UserDB = Depends(get_current_user)
 ):
-    # 1. Conversion explicite de l'ID (parfois le formulaire envoie une chaîne)
     try:
         p_id = int(patient_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="ID Patient invalide")
 
-    print(f" Tentative de création : Patient ID={p_id}, Type={type_analyse}, Labo ID={current_user.labo_id}")
-
-    # 2. Vérification du patient
     patient = db.query(models.Patient).filter(
         models.Patient.id == p_id, 
         models.Patient.labo_id == current_user.labo_id
     ).first()
     
     if not patient:
-        print(f"❌ Échec : Patient {p_id} non trouvé pour le labo {current_user.labo_id}")
-        raise HTTPException(status_code=404, detail="Patient non trouvé ou non autorisé")
+        raise HTTPException(status_code=404, detail="Patient non trouvé")
 
-    try:
-        # 3. Création
-        nouvelle_analyse = models.AnalyseDB(
-            patient_id=p_id,
-            type_analyse=type_analyse,
-            statut="En cours",
-            labo_id=current_user.labo_id
-        )
+    # Création de l'analyse
+    nouvelle_analyse = models.AnalyseDB(
+        patient_id=p_id,
+        type_analyse=type_analyse,
+        statut="En cours",
+        labo_id=current_user.labo_id
+    )
+    db.add(nouvelle_analyse)
+    db.commit()
+    db.refresh(nouvelle_analyse)
+
+    # Traitement des résultats si présents
+    if result_names and result_values:
+        names = result_names.split('||')
+        values = result_values.split('||')
+        units = result_units.split('||') if result_units else []
+        mins = result_mins.split('||') if result_mins else []
+        maxs = result_maxs.split('||') if result_maxs else []
+
+        for i, name in enumerate(names):
+            if name and values[i]:
+                res = models.Resultat(
+                    analyse_id=nouvelle_analyse.id,
+                    nom_test=name.strip(),
+                    valeur=values[i].strip(),
+                    unite=units[i].strip() if i < len(units) else "",
+                    norme_min=mins[i].strip() if i < len(mins) else "",
+                    norme_max=maxs[i].strip() if i < len(maxs) else ""
+                )
+                db.add(res)
         
-        db.add(nouvelle_analyse)
         db.commit()
-        db.refresh(nouvelle_analyse)
-        
-        print(f"✅ Succès : Analyse créée ID={nouvelle_analyse.id}")
-        
-        # 4. Redirection
-        return RedirectResponse(url="/", status_code=303)
-    
-    except Exception as e:
-        db.rollback()
-        print(f"💥 Erreur Base de Données : {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Erreur serveur : {str(e)}")
+
+    return RedirectResponse(url="/", status_code=303)
