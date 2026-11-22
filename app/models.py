@@ -43,6 +43,7 @@ class AnalyseDB(Base):
     labo_id = Column(Integer, ForeignKey('labos.id'), nullable=False)
     labo = relationship("LaboDB", back_populates="analyses")
     patient = relationship("Patient", back_populates="analyses")
+    resultats = relationship("Resultat", back_populates="analyse", cascade="all, delete-orphan")
     created_at = Column(DateTime, default=datetime.utcnow)
 
 class PasswordResetToken(Base):
@@ -53,3 +54,14 @@ class PasswordResetToken(Base):
     expires_at = Column(DateTime, nullable=False)
     used = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+class Resultat(Base):
+    __tablename__ = "resultats"
+    id = Column(Integer, primary_key=True, index=True)
+    analyse_id = Column(Integer, ForeignKey('analyses.id'), nullable=False)
+    nom_test = Column(String(100), nullable=False)
+    valeur = Column(String(50), nullable=False)
+    unite = Column(String(20), nullable=True)
+    norme_min = Column(String(20), nullable=True)
+    norme_max = Column(String(20), nullable=True)
+    analyse = relationship("AnalyseDB", back_populates="resultats")
