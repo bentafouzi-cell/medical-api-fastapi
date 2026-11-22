@@ -69,3 +69,37 @@ def create_analyse(
         db.commit()
 
     return RedirectResponse(url="/", status_code=303)
+    @router.get("/detail/{analyse_id}")
+def get_analyse_detail(
+    analyse_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.UserDB = Depends(get_current_user)
+):
+    analyse = db.query(models.AnalyseDB).filter(
+        models.AnalyseDB.id == analyse_id,
+        models.AnalyseDB.labo_id == current_user.labo_id
+    ).first()
+
+    if not analyse:
+        raise HTTPException(status_code=404, detail="Analyse non trouvée")
+
+    resultats = db.query(models.Resultat).filter(
+        models.Resultat.analyse_id == analyse_id
+    ).all()
+
+    return {
+        "analyse_id": analyse.id,
+        "patient": f"{analyse.patient.nom} {analyse.patient.prenom}",
+        "type_analyse": analyse.type_analyse,
+        "statut": analyse.statut,
+        "date": analyse.created_at.strftime("%d/%m/%Y %H:%M"),
+        "resultats": [
+            {
+                "nom_test": r.nom_test,
+                "valeur": r.valeur,
+                "unite": r.unite,
+                "norme_min": r.norme_min,
+                "norme_max": r.norme_max
+            } for r in resultats
+        ]
+    }
