@@ -2,69 +2,319 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Admin - MedicLab</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Administration - MedicLab</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
-        .navbar { background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        :root {
+            --ink: #0f172a;
+            --muted: #64748b;
+            --line: #e2e8f0;
+            --bg: #f6f8fb;
+            --brand: #0e7490;
+            --brand-soft: #ecfeff;
+        }
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+        .topbar {
+            background: #fff;
+            border-bottom: 1px solid var(--line);
+        }
+        .brand {
+            font-weight: 700;
+            letter-spacing: -.02em;
+            color: var(--ink);
+            text-decoration: none;
+        }
+        .brand .dot {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 30px; height: 30px; border-radius: 8px;
+            background: var(--brand); color: #fff; font-size: .85rem; margin-right: .55rem;
+        }
+        .pill-role {
+            font-size: .7rem; font-weight: 600; letter-spacing: .06em;
+            text-transform: uppercase; color: var(--brand);
+            background: var(--brand-soft); border: 1px solid #cffafe;
+            padding: .2rem .5rem; border-radius: 999px;
+        }
+        .page-title { font-weight: 700; letter-spacing: -.02em; }
+        .sub { color: var(--muted); font-size: .9rem; }
+
+        .stat {
+            background: #fff; border: 1px solid var(--line); border-radius: 12px;
+            padding: 1rem 1.15rem; height: 100%;
+        }
+        .stat .label { font-size: .74rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; }
+        .stat .value { font-size: 1.75rem; font-weight: 700; line-height: 1.2; letter-spacing: -.03em; }
+        .stat .icon {
+            width: 34px; height: 34px; border-radius: 9px; display: flex;
+            align-items: center; justify-content: center; font-size: .85rem;
+        }
+
+        .panel { background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+        .panel-head { padding: .85rem 1.15rem; border-bottom: 1px solid var(--line); }
+
+        .table { margin: 0; }
+        .table thead th {
+            background: #fbfcfe; color: var(--muted);
+            font-size: .72rem; text-transform: uppercase; letter-spacing: .06em;
+            font-weight: 600; border-bottom: 1px solid var(--line); white-space: nowrap;
+        }
+        .table tbody td { border-color: #f1f5f9; vertical-align: middle; }
+        .table tbody tr:hover { background: #fafcff; }
+        th.sortable { cursor: pointer; user-select: none; }
+        th.sortable:hover { color: var(--brand); }
+
+        .avatar {
+            width: 32px; height: 32px; border-radius: 8px; flex: 0 0 auto;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: .75rem; font-weight: 700; color: #fff; margin-right: .65rem;
+        }
+        .labo-name { font-weight: 600; }
+        .labo-id { font-size: .75rem; color: var(--muted); }
+        .num { font-variant-numeric: tabular-nums; font-weight: 600; }
+        .zero { color: #cbd5e1; font-weight: 500; }
+        .chip {
+            display: inline-block; min-width: 30px; text-align: center;
+            padding: .18rem .5rem; border-radius: 6px; font-size: .8rem; font-weight: 600;
+        }
+        .chip-blue { background: #eff6ff; color: #1d4ed8; }
+        .chip-green { background: #ecfdf5; color: #047857; }
+        .chip-violet { background: #f5f3ff; color: #6d28d9; }
+        .chip-grey { background: #f1f5f9; color: #94a3b8; }
+
+        .state { padding: 3rem 1rem; text-align: center; color: var(--muted); }
+        .state i { font-size: 1.6rem; margin-bottom: .6rem; display: block; opacity: .5; }
+        .skeleton { height: 14px; border-radius: 4px; background: linear-gradient(90deg,#eef2f7,#f8fafc,#eef2f7); background-size: 200% 100%; animation: sk 1.2s infinite; }
+        @keyframes sk { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+        .search-wrap { position: relative; }
+        .search-wrap i { position: absolute; left: .7rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: .8rem; }
+        .search-wrap input { padding-left: 2rem; border-color: var(--line); }
+        .btn-ghost { border: 1px solid var(--line); background: #fff; color: var(--ink); }
+        .btn-ghost:hover { background: #f8fafc; border-color: #cbd5e1; }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light mb-4">
-        <div class="container">
-            <a class="navbar-brand fw-bold text-danger" href="/admin"><i class="fas fa-crown me-2"></i>MedicLab Admin</a>
-            <div class="ms-auto">
-                <a href="/" class="btn btn-outline-secondary btn-sm rounded-pill px-3 me-2">Tableau de bord</a>
-                <a href="/logout" class="btn btn-outline-danger btn-sm rounded-pill px-3">Déconnexion</a>
+    <nav class="topbar py-2 mb-4">
+        <div class="container-xl d-flex align-items-center">
+            <a class="brand d-flex align-items-center" href="/admin">
+                <span class="dot"><i class="fas fa-flask"></i></span>MedicLab
+            </a>
+            <span class="pill-role ms-3">Administration</span>
+            <div class="ms-auto d-flex gap-2">
+                <a href="/" class="btn btn-ghost btn-sm rounded-3 px-3">Tableau de bord</a>
+                <a href="/logout" class="btn btn-ghost btn-sm rounded-3 px-3 text-danger">Déconnexion</a>
             </div>
         </div>
     </nav>
 
-    <div class="container">
-        <h2 class="mb-4"><i class="fas fa-building me-2 text-danger"></i>Liste des Laboratoires</h2>
-        <div class="card">
-            <div class="card-body p-0">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
+    <div class="container-xl pb-5">
+        <div class="d-flex flex-wrap align-items-end justify-content-between mb-3 gap-2">
+            <div>
+                <h1 class="page-title h3 mb-1">Laboratoires</h1>
+                <div class="sub">Vue d'ensemble des comptes clients de la plateforme</div>
+            </div>
+            <div class="d-flex gap-2">
+                <button id="btnExport" class="btn btn-ghost btn-sm rounded-3 px-3" disabled>
+                    <i class="fas fa-download me-1"></i>Exporter
+                </button>
+                <button id="btnRefresh" class="btn btn-ghost btn-sm rounded-3 px-3">
+                    <i class="fas fa-rotate me-1"></i>Actualiser
+                </button>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4" id="stats">
+            <div class="col-6 col-lg-3">
+                <div class="stat d-flex justify-content-between align-items-start">
+                    <div><div class="label">Laboratoires</div><div class="value" id="sLabos">—</div></div>
+                    <div class="icon" style="background:#ecfeff;color:#0e7490"><i class="fas fa-building"></i></div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat d-flex justify-content-between align-items-start">
+                    <div><div class="label">Utilisateurs</div><div class="value" id="sUsers">—</div></div>
+                    <div class="icon" style="background:#eff6ff;color:#1d4ed8"><i class="fas fa-user-md"></i></div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat d-flex justify-content-between align-items-start">
+                    <div><div class="label">Patients</div><div class="value" id="sPatients">—</div></div>
+                    <div class="icon" style="background:#ecfdf5;color:#047857"><i class="fas fa-hospital-user"></i></div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat d-flex justify-content-between align-items-start">
+                    <div><div class="label">Analyses</div><div class="value" id="sAnalyses">—</div></div>
+                    <div class="icon" style="background:#f5f3ff;color:#6d28d9"><i class="fas fa-vial"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-head d-flex flex-wrap gap-2 align-items-center justify-content-between">
+                <div class="search-wrap" style="min-width:240px">
+                    <i class="fas fa-magnifying-glass"></i>
+                    <input id="search" type="search" class="form-control form-control-sm rounded-3" placeholder="Rechercher un laboratoire…">
+                </div>
+                <div class="sub" id="count"></div>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
                         <tr>
-                            <th class="ps-4">Nom du Labo</th>
-                            <th>Date d'inscription</th>
-                            <th>Utilisateurs</th>
-                            <th>Patients</th>
-                            <th>Analyses</th>
+                            <th class="ps-4 sortable" data-sort="nom">Laboratoire <i class="fas fa-sort ms-1 opacity-50"></i></th>
+                            <th class="sortable" data-sort="created_at">Inscription <i class="fas fa-sort ms-1 opacity-50"></i></th>
+                            <th class="text-center sortable" data-sort="nb_users">Utilisateurs <i class="fas fa-sort ms-1 opacity-50"></i></th>
+                            <th class="text-center sortable" data-sort="nb_patients">Patients <i class="fas fa-sort ms-1 opacity-50"></i></th>
+                            <th class="text-center sortable pe-4" data-sort="nb_analyses">Analyses <i class="fas fa-sort ms-1 opacity-50"></i></th>
                         </tr>
                     </thead>
-                    <tbody id="labosTableBody"></tbody>
+                    <tbody id="rows"></tbody>
                 </table>
             </div>
+            <div id="state"></div>
         </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', loadLabos);
+        const PALETTE = ['#0e7490','#1d4ed8','#047857','#6d28d9','#b45309','#be123c','#0f766e','#4338ca'];
+        let tous = [];
+        let tri = { cle: 'nom', asc: true };
 
-        async function loadLabos() {
-            const response = await fetch('/api/admin/labos');
-            if (!response.ok) {
-                document.getElementById('labosTableBody').innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">Accès refusé. Réservé à l\'administrateur.</td></tr>';
+        const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c =>
+            ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+
+        const initiales = (nom) => nom.trim().split(/\s+/).slice(0, 2)
+            .map(m => m[0] || '').join('').toUpperCase() || '?';
+
+        const couleur = (id) => PALETTE[Math.abs(Number(id) || 0) % PALETTE.length];
+
+        function chip(n, classe) {
+            const v = Number(n) || 0;
+            return `<span class="chip ${v ? classe : 'chip-grey'}">${v}</span>`;
+        }
+
+        function etat(html) { document.getElementById('state').innerHTML = html; }
+
+        function chargement() {
+            document.getElementById('rows').innerHTML = Array.from({ length: 4 }).map(() =>
+                `<tr><td class="ps-4"><div class="skeleton" style="width:60%"></div></td>
+                 <td><div class="skeleton" style="width:70px"></div></td>
+                 <td><div class="skeleton" style="width:34px;margin:auto"></div></td>
+                 <td><div class="skeleton" style="width:34px;margin:auto"></div></td>
+                 <td class="pe-4"><div class="skeleton" style="width:34px;margin:auto"></div></td></tr>`).join('');
+            etat('');
+        }
+
+        function rendre() {
+            const q = document.getElementById('search').value.trim().toLowerCase();
+            let liste = tous.filter(l => (l.nom || '').toLowerCase().includes(q));
+
+            liste.sort((a, b) => {
+                const k = tri.cle;
+                let x = a[k], y = b[k];
+                if (k.startsWith('nb_')) { x = Number(x) || 0; y = Number(y) || 0; }
+                else { x = String(x || '').toLowerCase(); y = String(y || '').toLowerCase(); }
+                return (x < y ? -1 : x > y ? 1 : 0) * (tri.asc ? 1 : -1);
+            });
+
+            document.getElementById('count').textContent =
+                liste.length + ' sur ' + tous.length + ' laboratoire' + (tous.length > 1 ? 's' : '');
+
+            if (!liste.length) {
+                document.getElementById('rows').innerHTML = '';
+                etat(`<div class="state"><i class="fas fa-inbox"></i>
+                      ${tous.length ? 'Aucun laboratoire ne correspond à cette recherche.'
+                                    : 'Aucun laboratoire enregistré pour le moment.'}</div>`);
                 return;
             }
-            const labos = await response.json();
-            const tbody = document.getElementById('labosTableBody');
-            tbody.innerHTML = '';
-            labos.forEach(labo => {
-                const row = `<tr>
-                    <td class="ps-4 fw-semibold">${labo.nom}</td>
-                    <td>${labo.created_at}</td>
-                    <td><span class="badge bg-primary">${labo.nb_users}</span></td>
-                    <td><span class="badge bg-success">${labo.nb_patients}</span></td>
-                    <td><span class="badge bg-info">${labo.nb_analyses}</span></td>
-                </tr>`;
-                tbody.innerHTML += row;
-            });
+            etat('');
+            document.getElementById('rows').innerHTML = liste.map(l => `
+                <tr>
+                    <td class="ps-4">
+                        <div class="d-flex align-items-center">
+                            <span class="avatar" style="background:${couleur(l.id)}">${esc(initiales(l.nom || '?'))}</span>
+                            <div>
+                                <div class="labo-name">${esc(l.nom)}</div>
+                                <div class="labo-id">#${esc(l.id)}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="sub">${esc(l.created_at) || '—'}</td>
+                    <td class="text-center">${chip(l.nb_users, 'chip-blue')}</td>
+                    <td class="text-center">${chip(l.nb_patients, 'chip-green')}</td>
+                    <td class="text-center pe-4">${chip(l.nb_analyses, 'chip-violet')}</td>
+                </tr>`).join('');
         }
+
+        function statistiques() {
+            const somme = (k) => tous.reduce((s, l) => s + (Number(l[k]) || 0), 0);
+            document.getElementById('sLabos').textContent = tous.length;
+            document.getElementById('sUsers').textContent = somme('nb_users');
+            document.getElementById('sPatients').textContent = somme('nb_patients');
+            document.getElementById('sAnalyses').textContent = somme('nb_analyses');
+        }
+
+        async function charger() {
+            chargement();
+            document.getElementById('btnExport').disabled = true;
+            try {
+                const r = await fetch('/api/admin/labos', { headers: { 'Accept': 'application/json' } });
+                if (r.status === 401) {
+                    document.getElementById('rows').innerHTML = '';
+                    etat(`<div class="state"><i class="fas fa-lock"></i>Session expirée.
+                          <div class="mt-3"><a href="/login?next=/admin" class="btn btn-ghost btn-sm rounded-3 px-3">Se reconnecter</a></div></div>`);
+                    return;
+                }
+                if (r.status === 403) {
+                    document.getElementById('rows').innerHTML = '';
+                    etat(`<div class="state"><i class="fas fa-ban"></i>Ce compte n'a pas les droits administrateur.</div>`);
+                    return;
+                }
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                tous = await r.json();
+                statistiques();
+                rendre();
+                document.getElementById('btnExport').disabled = tous.length === 0;
+            } catch (e) {
+                document.getElementById('rows').innerHTML = '';
+                etat(`<div class="state"><i class="fas fa-triangle-exclamation"></i>
+                      Impossible de charger les laboratoires (${esc(e.message)}).
+                      <div class="mt-3"><button class="btn btn-ghost btn-sm rounded-3 px-3" onclick="charger()">Réessayer</button></div></div>`);
+            }
+        }
+
+        function exporter() {
+            const entetes = ['id', 'nom', 'created_at', 'nb_users', 'nb_patients', 'nb_analyses'];
+            const lignes = [entetes.join(';')].concat(
+                tous.map(l => entetes.map(k => '"' + String(l[k] ?? '').replace(/"/g, '""') + '"').join(';'))
+            );
+            const blob = new Blob(['\ufeff' + lignes.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'laboratoires.csv';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            charger();
+            document.getElementById('btnRefresh').addEventListener('click', charger);
+            document.getElementById('btnExport').addEventListener('click', exporter);
+            document.getElementById('search').addEventListener('input', rendre);
+            document.querySelectorAll('th.sortable').forEach(th => {
+                th.addEventListener('click', () => {
+                    const cle = th.dataset.sort;
+                    tri = { cle, asc: tri.cle === cle ? !tri.asc : true };
+                    rendre();
+                });
+            });
+        });
     </script>
 </body>
 </html>
