@@ -1,0 +1,31 @@
+# Secrets : ne doivent JAMAIS entrer dans une image
+.env
+.env.*
+!.env.example
+
+# Donnees : bases locales, journaux, exports
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# Environnements virtuels et caches
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Historique Git
+.git/
+.gitignore
+
+# Fichiers inutiles a l'execution
+README.md
+Dockerfile
+.dockerignore
+tests/
+test_*.py

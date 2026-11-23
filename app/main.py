@@ -1,5 +1,15 @@
 import os
+import sys
 from urllib.parse import quote
+
+# Les journaux contiennent des emoji. Sans UTF-8, la console Windows (cp1252)
+# leve une UnicodeEncodeError et l'application ne demarre pas.
+for _flux in (sys.stdout, sys.stderr):
+    try:
+        _flux.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 from fastapi import FastAPI, Request, Depends, HTTPException, Query
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse, StreamingResponse, JSONResponse
