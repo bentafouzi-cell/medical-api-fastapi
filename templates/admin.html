@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - MedicLab</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
+        .navbar { background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-danger" href="/admin"><i class="fas fa-crown me-2"></i>MedicLab Admin</a>
+            <div class="ms-auto">
+                <a href="/" class="btn btn-outline-secondary btn-sm rounded-pill px-3 me-2">Tableau de bord</a>
+                <a href="/logout" class="btn btn-outline-danger btn-sm rounded-pill px-3">Déconnexion</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2 class="mb-4"><i class="fas fa-building me-2 text-danger"></i>Liste des Laboratoires</h2>
+        <div class="card">
+            <div class="card-body p-0">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Nom du Labo</th>
+                            <th>Date d'inscription</th>
+                            <th>Utilisateurs</th>
+                            <th>Patients</th>
+                            <th>Analyses</th>
+                        </tr>
+                    </thead>
+                    <tbody id="labosTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', loadLabos);
+
+        async function loadLabos() {
+            const response = await fetch('/api/admin/labos');
+            if (!response.ok) {
+                document.getElementById('labosTableBody').innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">Accès refusé. Réservé à l\'administrateur.</td></tr>';
+                return;
+            }
+            const labos = await response.json();
+            const tbody = document.getElementById('labosTableBody');
+            tbody.innerHTML = '';
+            labos.forEach(labo => {
+                const row = `<tr>
+                    <td class="ps-4 fw-semibold">${labo.nom}</td>
+                    <td>${labo.created_at}</td>
+                    <td><span class="badge bg-primary">${labo.nb_users}</span></td>
+                    <td><span class="badge bg-success">${labo.nb_patients}</span></td>
+                    <td><span class="badge bg-info">${labo.nb_analyses}</span></td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+    </script>
+</body>
+</html>

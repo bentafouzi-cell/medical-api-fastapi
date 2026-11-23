@@ -18,6 +18,7 @@ class UserDB(Base):
     email = Column(String(255), unique=True, index=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True)
+    is_admin = Column(Boolean, default=False) # <-- Nouveau champ
     labo_id = Column(Integer, ForeignKey('labos.id'), nullable=False)
     labo = relationship("LaboDB", back_populates="users")
 
