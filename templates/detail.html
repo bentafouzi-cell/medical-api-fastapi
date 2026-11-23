@@ -15,7 +15,7 @@
         .bg-en-cours { background-color: #fff3cd; color: #856404; }
         .bg-termine { background-color: #d1e7dd; color: #0f5132; }
         @media print {
-            .navbar, .no-print { display: none !important; }
+            .navbar, .no-print, .edit-row { display: none !important; }
             body { background-color: white; }
             .card { box-shadow: none; border: none; margin: 0; padding: 0; }
             .container { max-width: 100%; margin: 0; padding: 0; }
@@ -34,7 +34,7 @@
                     </button>
                 </form>
                 {% endif %}
-                
+
                 <a href="/analyse/{{ analyse.id }}/pdf" class="btn btn-success btn-sm rounded-pill px-3 me-2">
                     <i class="fas fa-file-pdf me-1"></i> Télécharger PDF
                 </a>
@@ -72,7 +72,12 @@
                     </div>
                 </div>
                 <hr>
-                <h5 class="text-secondary mb-3"><i class="fas fa-flask me-2"></i>Résultats Biologiques</h5>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="text-secondary mb-0"><i class="fas fa-flask me-2"></i>Résultats Biologiques</h5>
+                    <span class="text-muted small no-print">
+                        <i class="fas fa-pen me-1"></i>Modifier &nbsp;|&nbsp; <i class="fas fa-trash me-1"></i>Supprimer
+                    </span>
+                </div>
 
                 {% if analyse.resultats %}
                 <table class="table table-bordered table-hover align-middle">
@@ -81,8 +86,10 @@
                             <th>Test</th>
                             <th class="text-center">Résultat</th>
                             <th class="text-center">Unité</th>
-                            <th class="text-center">Valeurs de Référence</th>
+                            <th class="text-center">Norme Min</th>
+                            <th class="text-center">Norme Max</th>
                             <th class="text-center">Statut</th>
+                            <th class="text-center no-print">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -90,7 +97,7 @@
                         {% set val = res.valeur|float %}
                         {% set min = res.norme_min|float if res.norme_min else None %}
                         {% set max = res.norme_max|float if res.norme_max else None %}
-                        <tr>
+                        <tr id="view-{{ res.id }}">
                             <td class="fw-semibold">{{ res.nom_test }}</td>
                             <td class="text-center fs-5">
                                 {% if min is not none and max is not none %}
@@ -104,13 +111,8 @@
                                 {% endif %}
                             </td>
                             <td class="text-center text-muted">{{ res.unite }}</td>
-                            <td class="text-center">
-                                {% if res.norme_min and res.norme_max %}
-                                    {{ res.norme_min }} - {{ res.norme_max }}
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </td>
+                            <td class="text-center">{{ res.norme_min or '-' }}</td>
+                            <td class="text-center">{{ res.norme_max or '-' }}</td>
                             <td class="text-center">
                                 {% if min is not none and max is not none %}
                                     {% if val < min or val > max %}
@@ -121,6 +123,29 @@
                                 {% else %}
                                     <span class="text-muted small">-</span>
                                 {% endif %}
+                            </td>
+                            <td class="text-center no-print">
+                                <button class="btn btn-sm btn-outline-primary rounded-pill me-1" onclick="editRow({{ res.id }})" title="Modifier">
+                                    <i class="fas fa-pen"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger rounded-pill" onclick="deleteResult({{ res.id }})" title="Supprimer">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr id="edit-{{ res.id }}" class="edit-row" style="display: none; background-color: #f8f9fa;">
+                            <td><input type="text" id="edit-nom-{{ res.id }}" class="form-control form-control-sm" value="{{ res.nom_test }}"></td>
+                            <td><input type="text" id="edit-valeur-{{ res.id }}" class="form-control form-control-sm text-center" value="{{ res.valeur }}"></td>
+                            <td><input type="text" id="edit-unite-{{ res.id }}" class="form-control form-control-sm text-center" value="{{ res.unite or '' }}"></td>
+                            <td><input type="text" id="edit-min-{{ res.id }}" class="form-control form-control-sm text-center" value="{{ res.norme_min or '' }}" placeholder="Min"></td>
+                            <td><input type="text" id="edit-max-{{ res.id }}" class="form-control form-control-sm text-center" value="{{ res.norme_max or '' }}" placeholder="Max"></td>
+                            <td colspan="2" class="text-center">
+                                <button class="btn btn-sm btn-success rounded-pill me-1" onclick="saveResult({{ res.id }})" title="Enregistrer">
+                                    <i class="fas fa-check me-1"></i>Enregistrer
+                                </button>
+                                <button class="btn btn-sm btn-secondary rounded-pill" onclick="cancelEdit({{ res.id }})" title="Annuler">
+                                    <i class="fas fa-times"></i>
+                                </button>
                             </td>
                         </tr>
                         {% endfor %}
@@ -134,5 +159,57 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function editRow(id) {
+            document.getElementById('view-' + id).style.display = 'none';
+            document.getElementById('edit-' + id).style.display = '';
+        }
+
+        function cancelEdit(id) {
+            document.getElementById('edit-' + id).style.display = 'none';
+            document.getElementById('view-' + id).style.display = '';
+        }
+
+        async function saveResult(id) {
+            const formData = new URLSearchParams();
+            formData.append('nom_test', document.getElementById('edit-nom-' + id).value);
+            formData.append('valeur', document.getElementById('edit-valeur-' + id).value);
+            formData.append('unite', document.getElementById('edit-unite-' + id).value);
+            formData.append('norme_min', document.getElementById('edit-min-' + id).value);
+            formData.append('norme_max', document.getElementById('edit-max-' + id).value);
+
+            try {
+                const response = await fetch('/api/analyses/resultats/' + id + '/update', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: formData
+                });
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Erreur lors de la mise à jour du résultat.');
+                }
+            } catch (error) {
+                alert('Erreur de connexion au serveur.');
+            }
+        }
+
+        async function deleteResult(id) {
+            if (!confirm('Êtes-vous sûr de vouloir supprimer ce résultat ?')) return;
+            try {
+                const response = await fetch('/api/analyses/resultats/' + id + '/delete', {
+                    method: 'POST'
+                });
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Erreur lors de la suppression.');
+                }
+            } catch (error) {
+                alert('Erreur de connexion au serveur.');
+            }
+        }
+    </script>
 </body>
 </html>
