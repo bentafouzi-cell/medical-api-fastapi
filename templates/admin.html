@@ -15,77 +15,41 @@
             --brand: #0e7490;
             --brand-soft: #ecfeff;
         }
-        body {
-            background: var(--bg);
-            color: var(--ink);
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-        }
-        .topbar {
-            background: #fff;
-            border-bottom: 1px solid var(--line);
-        }
-        .brand {
-            font-weight: 700;
-            letter-spacing: -.02em;
-            color: var(--ink);
-            text-decoration: none;
-        }
-        .brand .dot {
-            display: inline-flex; align-items: center; justify-content: center;
-            width: 30px; height: 30px; border-radius: 8px;
-            background: var(--brand); color: #fff; font-size: .85rem; margin-right: .55rem;
-        }
-        .pill-role {
-            font-size: .7rem; font-weight: 600; letter-spacing: .06em;
-            text-transform: uppercase; color: var(--brand);
-            background: var(--brand-soft); border: 1px solid #cffafe;
-            padding: .2rem .5rem; border-radius: 999px;
-        }
+        body { background: var(--bg); color: var(--ink); font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        .topbar { background: #fff; border-bottom: 1px solid var(--line); }
+        .brand { font-weight: 700; letter-spacing: -.02em; color: var(--ink); text-decoration: none; }
+        .brand .dot { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 8px; background: var(--brand); color: #fff; font-size: .85rem; margin-right: .55rem; }
+        .pill-role { font-size: .7rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--brand); background: var(--brand-soft); border: 1px solid #cffafe; padding: .2rem .5rem; border-radius: 999px; }
         .page-title { font-weight: 700; letter-spacing: -.02em; }
         .sub { color: var(--muted); font-size: .9rem; }
 
-        .stat {
-            background: #fff; border: 1px solid var(--line); border-radius: 12px;
-            padding: 1rem 1.15rem; height: 100%;
-        }
+        .stat { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 1rem 1.15rem; height: 100%; }
         .stat .label { font-size: .74rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; }
         .stat .value { font-size: 1.75rem; font-weight: 700; line-height: 1.2; letter-spacing: -.03em; }
-        .stat .icon {
-            width: 34px; height: 34px; border-radius: 9px; display: flex;
-            align-items: center; justify-content: center; font-size: .85rem;
-        }
+        .stat .icon { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: .85rem; }
 
         .panel { background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
         .panel-head { padding: .85rem 1.15rem; border-bottom: 1px solid var(--line); }
 
         .table { margin: 0; }
-        .table thead th {
-            background: #fbfcfe; color: var(--muted);
-            font-size: .72rem; text-transform: uppercase; letter-spacing: .06em;
-            font-weight: 600; border-bottom: 1px solid var(--line); white-space: nowrap;
-        }
+        .table thead th { background: #fbfcfe; color: var(--muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; border-bottom: 1px solid var(--line); white-space: nowrap; }
         .table tbody td { border-color: #f1f5f9; vertical-align: middle; }
         .table tbody tr:hover { background: #fafcff; }
         th.sortable { cursor: pointer; user-select: none; }
         th.sortable:hover { color: var(--brand); }
 
-        .avatar {
-            width: 32px; height: 32px; border-radius: 8px; flex: 0 0 auto;
-            display: inline-flex; align-items: center; justify-content: center;
-            font-size: .75rem; font-weight: 700; color: #fff; margin-right: .65rem;
-        }
+        .avatar { width: 32px; height: 32px; border-radius: 8px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; font-size: .75rem; font-weight: 700; color: #fff; margin-right: .65rem; }
         .labo-name { font-weight: 600; }
         .labo-id { font-size: .75rem; color: var(--muted); }
         .num { font-variant-numeric: tabular-nums; font-weight: 600; }
         .zero { color: #cbd5e1; font-weight: 500; }
-        .chip {
-            display: inline-block; min-width: 30px; text-align: center;
-            padding: .18rem .5rem; border-radius: 6px; font-size: .8rem; font-weight: 600;
-        }
+        .chip { display: inline-block; min-width: 30px; text-align: center; padding: .18rem .5rem; border-radius: 6px; font-size: .8rem; font-weight: 600; }
         .chip-blue { background: #eff6ff; color: #1d4ed8; }
         .chip-green { background: #ecfdf5; color: #047857; }
         .chip-violet { background: #f5f3ff; color: #6d28d9; }
         .chip-grey { background: #f1f5f9; color: #94a3b8; }
+        .chip-red { background: #fef2f2; color: #b91c1c; }
+        .chip-yellow { background: #fefce8; color: #854d0e; }
 
         .state { padding: 3rem 1rem; text-align: center; color: var(--muted); }
         .state i { font-size: 1.6rem; margin-bottom: .6rem; display: block; opacity: .5; }
@@ -96,6 +60,14 @@
         .search-wrap input { padding-left: 2rem; border-color: var(--line); }
         .btn-ghost { border: 1px solid var(--line); background: #fff; color: var(--ink); }
         .btn-ghost:hover { background: #f8fafc; border-color: #cbd5e1; }
+        .btn-action { border: none; background: transparent; padding: .25rem .5rem; border-radius: 6px; font-size: .8rem; cursor: pointer; transition: background .15s; }
+        .btn-action:hover { background: #f1f5f9; }
+        .btn-action.danger { color: #dc2626; }
+        .btn-action.danger:hover { background: #fef2f2; }
+        .btn-action.warning { color: #ca8a04; }
+        .btn-action.warning:hover { background: #fefce8; }
+        .btn-action.success { color: #16a34a; }
+        .btn-action.success:hover { background: #ecfdf5; }
     </style>
 </head>
 <body>
@@ -171,7 +143,9 @@
                             <th class="sortable" data-sort="created_at">Inscription <i class="fas fa-sort ms-1 opacity-50"></i></th>
                             <th class="text-center sortable" data-sort="nb_users">Utilisateurs <i class="fas fa-sort ms-1 opacity-50"></i></th>
                             <th class="text-center sortable" data-sort="nb_patients">Patients <i class="fas fa-sort ms-1 opacity-50"></i></th>
-                            <th class="text-center sortable pe-4" data-sort="nb_analyses">Analyses <i class="fas fa-sort ms-1 opacity-50"></i></th>
+                            <th class="text-center sortable" data-sort="nb_analyses">Analyses <i class="fas fa-sort ms-1 opacity-50"></i></th>
+                            <th class="text-center">Statut</th>
+                            <th class="text-end pe-4">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="rows"></tbody>
@@ -207,7 +181,9 @@
                  <td><div class="skeleton" style="width:70px"></div></td>
                  <td><div class="skeleton" style="width:34px;margin:auto"></div></td>
                  <td><div class="skeleton" style="width:34px;margin:auto"></div></td>
-                 <td class="pe-4"><div class="skeleton" style="width:34px;margin:auto"></div></td></tr>`).join('');
+                 <td class="pe-4"><div class="skeleton" style="width:34px;margin:auto"></div></td>
+                 <td><div class="skeleton" style="width:40px;margin:auto"></div></td>
+                 <td><div class="skeleton" style="width:60px;margin:auto"></div></td></tr>`).join('');
             etat('');
         }
 
@@ -234,7 +210,12 @@
                 return;
             }
             etat('');
-            document.getElementById('rows').innerHTML = liste.map(l => `
+            document.getElementById('rows').innerHTML = liste.map(l => {
+                const statut = l.is_active ? '<span class="chip chip-green">Actif</span>' : '<span class="chip chip-red">Suspendu</span>';
+                const btnToggle = l.is_active 
+                    ? `<button class="btn-action warning" onclick="toggleLabo(${l.id})" title="Suspendre"><i class="fas fa-pause"></i></button>`
+                    : `<button class="btn-action success" onclick="toggleLabo(${l.id})" title="Réactiver"><i class="fas fa-play"></i></button>`;
+                return `
                 <tr>
                     <td class="ps-4">
                         <div class="d-flex align-items-center">
@@ -248,8 +229,14 @@
                     <td class="sub">${esc(l.created_at) || '—'}</td>
                     <td class="text-center">${chip(l.nb_users, 'chip-blue')}</td>
                     <td class="text-center">${chip(l.nb_patients, 'chip-green')}</td>
-                    <td class="text-center pe-4">${chip(l.nb_analyses, 'chip-violet')}</td>
-                </tr>`).join('');
+                    <td class="text-center">${chip(l.nb_analyses, 'chip-violet')}</td>
+                    <td class="text-center">${statut}</td>
+                    <td class="text-end pe-4">
+                        ${btnToggle}
+                        <button class="btn-action danger" onclick="supprimerLabo(${l.id})" title="Supprimer"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`;
+            }).join('');
         }
 
         function statistiques() {
@@ -289,8 +276,30 @@
             }
         }
 
+        async function toggleLabo(id) {
+            if (!confirm('Changer le statut de ce laboratoire ?')) return;
+            try {
+                const r = await fetch(`/api/admin/labos/${id}/toggle`, { method: 'POST' });
+                if (!r.ok) throw new Error('Erreur');
+                charger();
+            } catch (e) {
+                alert('Erreur lors du changement de statut');
+            }
+        }
+
+        async function supprimerLabo(id) {
+            if (!confirm('Supprimer ce laboratoire et TOUTES ses données ? Cette action est irréversible.')) return;
+            try {
+                const r = await fetch(`/api/admin/labos/${id}`, { method: 'DELETE' });
+                if (!r.ok) throw new Error('Erreur');
+                charger();
+            } catch (e) {
+                alert('Erreur lors de la suppression');
+            }
+        }
+
         function exporter() {
-            const entetes = ['id', 'nom', 'created_at', 'nb_users', 'nb_patients', 'nb_analyses'];
+            const entetes = ['id', 'nom', 'created_at', 'nb_users', 'nb_patients', 'nb_analyses', 'is_active'];
             const lignes = [entetes.join(';')].concat(
                 tous.map(l => entetes.map(k => '"' + String(l[k] ?? '').replace(/"/g, '""') + '"').join(';'))
             );

@@ -7,6 +7,7 @@ class LaboDB(Base):
     __tablename__ = "labos"
     id = Column(Integer, primary_key=True, index=True)
     nom = Column(String(100), unique=True, nullable=False)
+    is_active = Column(Boolean, default=True)  # <-- Nouveau champ
     created_at = Column(DateTime, default=datetime.utcnow)
     users = relationship("UserDB", back_populates="labo")
     patients = relationship("Patient", back_populates="labo")

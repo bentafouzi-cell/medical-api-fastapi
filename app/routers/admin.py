@@ -20,9 +20,39 @@ def lister_labos(db: Session = Depends(get_db), current_user: models.UserDB = De
         result.append({
             "id": labo.id,
             "nom": labo.nom,
+            "is_active": labo.is_active,
             "created_at": labo.created_at.strftime("%d/%m/%Y") if labo.created_at else "",
             "nb_users": nb_users,
             "nb_patients": nb_patients,
             "nb_analyses": nb_analyses
         })
     return result
+
+@router.post("/labos/{labo_id}/toggle")
+def toggle_labo(labo_id: int, db: Session = Depends(get_db), current_user: models.UserDB = Depends(get_current_user)):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Accès réservé à l'administrateur")
+    
+    labo = db.query(models.LaboDB).filter(models.LaboDB.id == labo_id).first()
+    if not labo:
+        raise HTTPException(status_code=404, detail="Laboratoire non trouvé")
+    
+    labo.is_active = not labo.is_active
+    db.commit()
+    return {"message": f"Laboratoire {'activé' if labo.is_active else 'suspendu'}", "is_active": labo.is_active}
+
+@router.delete("/labos/{labo_id}")
+def supprimer_labo(labo_id: int, db: Session = Depends(get_db), current_user: models.UserDB = Depends(get_current_user)):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Accès réservé à l'administrateur")
+    
+    labo = db.query(models.LaboDB).filter(models.LaboDB.id == labo_id).first()
+    if not labo:
+        raise HTTPException(status_code=404, detail="Laboratoire non trouvé")
+    
+    db.query(models.AnalyseDB).filter(models.AnalyseDB.labo_id == labo_id).delete()
+    db.query(models.Patient).filter(models.Patient.labo_id == labo_id).delete()
+    db.query(models.UserDB).filter(models.UserDB.labo_id == labo_id).delete()
+    db.delete(labo)
+    db.commit()
+    return {"message": "Laboratoire et toutes ses données supprimés"}
