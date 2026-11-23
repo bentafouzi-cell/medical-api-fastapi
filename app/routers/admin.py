@@ -34,6 +34,13 @@ def toggle_labo(labo_id: int, db: Session = Depends(get_db), current_user: model
         raise HTTPException(status_code=403, detail="Accès réservé à l'administrateur")
     
     labo = db.query(models.LaboDB).filter(models.LaboDB.id == labo_id).first()
+    if labo is not None and labo.id == current_user.labo_id:
+        # Se suspendre ou se supprimer soi-meme = se verrouiller dehors, sans
+        # aucun moyen de revenir en arriere depuis l'interface.
+        raise HTTPException(
+            status_code=400,
+            detail="Impossible de modifier le laboratoire de votre propre compte administrateur",
+        )
     if not labo:
         raise HTTPException(status_code=404, detail="Laboratoire non trouvé")
     
@@ -47,6 +54,13 @@ def supprimer_labo(labo_id: int, db: Session = Depends(get_db), current_user: mo
         raise HTTPException(status_code=403, detail="Accès réservé à l'administrateur")
     
     labo = db.query(models.LaboDB).filter(models.LaboDB.id == labo_id).first()
+    if labo is not None and labo.id == current_user.labo_id:
+        # Se suspendre ou se supprimer soi-meme = se verrouiller dehors, sans
+        # aucun moyen de revenir en arriere depuis l'interface.
+        raise HTTPException(
+            status_code=400,
+            detail="Impossible de modifier le laboratoire de votre propre compte administrateur",
+        )
     if not labo:
         raise HTTPException(status_code=404, detail="Laboratoire non trouvé")
     

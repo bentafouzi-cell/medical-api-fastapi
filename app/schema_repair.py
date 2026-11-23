@@ -42,6 +42,35 @@ def reparer_schema() -> list[str]:
             print(f"[schema] colonne ajoutee : {nom} ({type_sql})")
             ajouts.append(nom)
 
+    ajouts.extend(_normaliser_drapeaux(inspecteur, tables_existantes))
+
     if not ajouts:
         print("[schema] aucun ecart detecte")
     return ajouts
+
+
+def _normaliser_drapeaux(inspecteur, tables_existantes: set[str]) -> list[str]:
+    """Remplace les NULL des drapeaux booleens par TRUE.
+
+    Une colonne ajoutee apres coup est NULL sur toutes les lignes existantes.
+    Or un drapeau NULL n'est ni vrai ni faux : l'interface l'affiche "suspendu"
+    et le premier clic inverse le sens. On considere qu'un compte existant est
+    actif, ce qui est le comportement attendu d'un client deja en service.
+    """
+    corriges: list[str] = []
+    for nom_table, nom_colonne in (("labos", "is_active"), ("users", "is_active")):
+        if nom_table not in tables_existantes:
+            continue
+        colonnes = {c["name"] for c in inspecteur.get_columns(nom_table)}
+        if nom_colonne not in colonnes:
+            continue
+
+        with engine.begin() as connexion:
+            resultat = connexion.execute(text(
+                f'UPDATE "{nom_table}" SET "{nom_colonne}" = TRUE '
+                f'WHERE "{nom_colonne}" IS NULL'
+            ))
+            if resultat.rowcount:
+                print(f"[schema] {nom_table}.{nom_colonne} : {resultat.rowcount} NULL remis a actif")
+                corriges.append(f"{nom_table}.{nom_colonne}")
+    return corriges

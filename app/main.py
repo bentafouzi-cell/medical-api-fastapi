@@ -94,11 +94,13 @@ def health_check():
     return {"status": "ok"}
 
 @app.get("/login")
-def login_page(request: Request, next_url: str = Query("/", alias="next"), expired: int = 0):
+def login_page(request: Request, next_url: str = Query("/", alias="next"), expired: int = 0,
+               error: str = Query("")):
     return templates.TemplateResponse("login.html", {
         "request": request,
         "next": next_url,
         "expired": expired,
+        "error": error,
     })
 
 @app.get("/forgot-password")
@@ -123,7 +125,9 @@ def admin_page(request: Request, current_user: models.UserDB = Depends(get_curre
 def admin_dashboard(request: Request, current_user: models.UserDB = Depends(get_current_user)):
     if not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Accès refusé")
-    return templates.TemplateResponse("admin_dashboard.html", {"request": request})
+    # admin_dashboard.html est vide : on renvoie vers la seule vraie page admin,
+    # pour ne pas maintenir deux interfaces qui divergent.
+    return RedirectResponse(url="/admin", status_code=302)
     
 @app.get("/")
 def read_root(request: Request, db: Session = Depends(get_db), current_user: models.UserDB = Depends(get_current_user)):

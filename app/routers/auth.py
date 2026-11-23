@@ -4,6 +4,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from datetime import timedelta, datetime
 import secrets
+from urllib.parse import quote
 from ..auth import (
     get_password_hash, verify_password, create_access_token,
     ACCESS_TOKEN_EXPIRE_MINUTES, COOKIE_SECURE,
@@ -55,6 +56,18 @@ def login_for_access_token(
             detail="Email ou mot de passe incorrect",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    # Un laboratoire suspendu ne doit plus pouvoir entrer. L'administrateur est
+    # exempte : sinon une suspension de son propre labo le verrouillerait dehors.
+    # is_active NULL (colonne ajoutee apres coup) est traite comme actif.
+    if not user.is_admin:
+        labo = db.query(models.LaboDB).filter(models.LaboDB.id == user.labo_id).first()
+        if labo is not None and labo.is_active is False:
+            message = "Ce laboratoire est suspendu. Contactez l'administrateur."
+            return RedirectResponse(
+                url=f"/login?error={quote(message)}&next={quote(_cible_apres_connexion(next_url))}",
+                status_code=302,
+            )
     
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
