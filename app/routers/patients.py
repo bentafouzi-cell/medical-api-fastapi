@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Form
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from typing import Optional
+from urllib.parse import quote
 from .. import models
 from ..database import get_db
 from ..auth import get_current_user
@@ -35,11 +36,11 @@ def create_patient(
         db.commit()
         db.refresh(nouveau_patient)
 
-        return RedirectResponse(url="/patients?success=1", status_code=303)
+        return RedirectResponse(url="/patients?success=added", status_code=303)
 
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Erreur serveur : {str(e)}")
+        return RedirectResponse(url="/patients?error=" + quote(f"Erreur lors de l'ajout : {str(e)}"), status_code=303)
 
 
 @router.get("/list")
@@ -62,19 +63,17 @@ def delete_patient(
     ).first()
 
     if not patient:
-        raise HTTPException(status_code=404, detail="Patient non trouvé")
+        return RedirectResponse(url="/patients?error=" + quote("Patient non trouvé."), status_code=303)
 
     analyses_count = db.query(models.AnalyseDB).filter(
         models.AnalyseDB.patient_id == patient_id
     ).count()
 
     if analyses_count > 0:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Impossible de supprimer ce patient : il a {analyses_count} analyse(s). Supprimez d'abord les analyses."
-        )
+        message = f"Impossible de supprimer {patient.nom} {patient.prenom} : ce patient a {analyses_count} analyse(s). Supprimez d'abord ses analyses."
+        return RedirectResponse(url="/patients?error=" + quote(message), status_code=303)
 
     db.delete(patient)
     db.commit()
 
-    return RedirectResponse(url="/patients", status_code=303)
+    return RedirectResponse(url="/patients?success=deleted", status_code=303)
