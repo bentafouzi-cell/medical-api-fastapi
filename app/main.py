@@ -125,6 +125,12 @@ def admin_page(request: Request, current_user: models.UserDB = Depends(get_curre
         raise HTTPException(status_code=403, detail="Accès refusé")
     return templates.TemplateResponse("admin.html", {"request": request})
 
+@app.get("/admin/dashboard")
+def admin_dashboard(request: Request, current_user: models.UserDB = Depends(get_current_user)):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Accès refusé")
+    return templates.TemplateResponse("admin_dashboard.html", {"request": request})
+    
 @app.get("/")
 def read_root(request: Request, db: Session = Depends(get_db), current_user: models.UserDB = Depends(get_current_user)):
     patients_list = db.query(models.Patient).filter(models.Patient.labo_id == current_user.labo_id).all()

@@ -16,7 +16,6 @@ router = APIRouter(prefix="/api/auth", tags=["Authentification"])
 
 
 def _cible_apres_connexion(next_url: str) -> str:
-    """N'accepte qu'un chemin local, sinon on offrirait une redirection ouverte."""
     if not next_url:
         return "/"
     if not next_url.startswith("/") or next_url.startswith("//") or "\\" in next_url:
@@ -58,9 +57,14 @@ def login_for_access_token(
         )
     
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(data={"sub": user.email}, expires_delta=access_token_expires)
+    access_token = create_access_token(
+        data={"sub": user.email, "is_admin": user.is_admin}, 
+        expires_delta=access_token_expires
+    )
     
-    response = RedirectResponse(url=_cible_apres_connexion(next_url), status_code=302)
+    redirect_url = "/admin/dashboard" if user.is_admin else _cible_apres_connexion(next_url)
+    
+    response = RedirectResponse(url=redirect_url, status_code=302)
     response.set_cookie(
         key="access_token",
         value=access_token,
