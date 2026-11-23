@@ -2,6 +2,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
+from dotenv import load_dotenv
+
+# Charge le fichier .env en local. Sur Render les variables existent deja :
+# load_dotenv n'ecrase jamais une variable deja definie.
+load_dotenv()
 
 # Récupère l'URL de la DB depuis les variables d'environnement Render
 DATABASE_URL = os.getenv("DATABASE_URL")

@@ -1,15 +1,27 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Form
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from datetime import timedelta, datetime
 import secrets
-from ..auth import get_password_hash, verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
+from ..auth import (
+    get_password_hash, verify_password, create_access_token,
+    ACCESS_TOKEN_EXPIRE_MINUTES, COOKIE_SECURE,
+)
 from .. import models
 from ..database import get_db
 from ..email_service import envoyer_email_reinitialisation
 
 router = APIRouter(prefix="/api/auth", tags=["Authentification"])
+
+
+def _cible_apres_connexion(next_url: str) -> str:
+    """N'accepte qu'un chemin local, sinon on offrirait une redirection ouverte."""
+    if not next_url:
+        return "/"
+    if not next_url.startswith("/") or next_url.startswith("//") or "\\" in next_url:
+        return "/"
+    return next_url
 
 @router.post("/register")
 def register_user(email: str, password: str, nom_labo: str, db: Session = Depends(get_db)):
@@ -31,7 +43,11 @@ def register_user(email: str, password: str, nom_labo: str, db: Session = Depend
     return {"message": "Utilisateur et labo créés avec succès", "email": new_user.email}
 
 @router.post("/login")
-def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def login_for_access_token(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    next_url: str = Form(""),
+    db: Session = Depends(get_db),
+):
     user = db.query(models.UserDB).filter(models.UserDB.email == form_data.username).first()
     
     if not user or not verify_password(form_data.password, user.hashed_password):
@@ -44,12 +60,14 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(data={"sub": user.email}, expires_delta=access_token_expires)
     
-    response = RedirectResponse(url="/", status_code=302)
+    response = RedirectResponse(url=_cible_apres_connexion(next_url), status_code=302)
     response.set_cookie(
         key="access_token",
         value=access_token,
         httponly=True,
-        max_age=60 * 30,
+        secure=COOKIE_SECURE,
+        samesite="lax",
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         path="/"
     )
     return response

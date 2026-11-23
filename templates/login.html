@@ -19,6 +19,12 @@
         </div>
         <div class="card-body p-4">
             
+            {% if expired %}
+            <div class="alert alert-warning" role="alert">
+                Votre session a expiré. Reconnectez-vous pour continuer.
+            </div>
+            {% endif %}
+
             {% if error %}
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 {{ error }}
@@ -28,6 +34,8 @@
 
             <!-- FORMULAIRE STANDARD SANS JAVASCRIPT -->
             <form action="/api/auth/login" method="POST">
+                <!-- Page a retrouver apres connexion (ex: /admin) -->
+                <input type="hidden" name="next_url" value="{{ next or '/' }}">
                 <div class="mb-3">
                     <label class="form-label">Email Professionnel</label>
                     <!-- Le nom DOIT être 'username' pour OAuth2PasswordRequestForm -->

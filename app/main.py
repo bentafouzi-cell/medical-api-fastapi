@@ -1,7 +1,8 @@
 import os
-from fastapi import FastAPI, Request, Depends, HTTPException
+from urllib.parse import quote
+from fastapi import FastAPI, Request, Depends, HTTPException, Query
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import RedirectResponse, StreamingResponse
+from fastapi.responses import RedirectResponse, StreamingResponse, JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from sqlalchemy.orm import Session
@@ -9,10 +10,23 @@ from xhtml2pdf import pisa
 from io import BytesIO
 from .database import engine, Base, get_db, SessionLocal
 from .routers import analyses, auth, patients, admin
-from .auth import get_current_user, get_password_hash
+from .auth import get_current_user, get_password_hash, COOKIE_SECURE
 from . import models
 
 Base.metadata.create_all(bind=engine)
+
+
+def verifier_configuration():
+    """Affiche dans les logs quelles variables sont presentes. Jamais les valeurs."""
+    attendues = ["SECRET_KEY", "DATABASE_URL", "ADMIN_EMAIL", "ADMIN_PASSWORD",
+                 "BREVO_API_KEY", "SENDER_EMAIL", "BASE_URL"]
+    etat = " | ".join(
+        f"{nom}: {'ok' if os.getenv(nom) else 'MANQUANT'}" for nom in attendues
+    )
+    print(f"[config] {etat}")
+
+
+verifier_configuration()
 
 app = FastAPI(title="API Analyse Médicale SaaS")
 templates = Jinja2Templates(directory="templates")
@@ -72,8 +86,12 @@ def health_check():
     return {"status": "ok"}
 
 @app.get("/login")
-def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+def login_page(request: Request, next_url: str = Query("/", alias="next"), expired: int = 0):
+    return templates.TemplateResponse("login.html", {
+        "request": request,
+        "next": next_url,
+        "expired": expired,
+    })
 
 @app.get("/forgot-password")
 def forgot_password_page(request: Request):
@@ -116,7 +134,7 @@ def read_root(request: Request, db: Session = Depends(get_db), current_user: mod
 @app.get("/logout")
 def logout(request: Request):
     response = RedirectResponse(url="/login", status_code=302)
-    response.delete_cookie(key="access_token")
+    response.delete_cookie(key="access_token", path="/", samesite="lax", secure=COOKIE_SECURE)
     return response
 
 @app.get("/analyse/{analyse_id}")
@@ -154,6 +172,20 @@ def generate_analyse_pdf(analyse_id: int, db: Session = Depends(get_db), current
 
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    chemin = request.url.path
+    est_api = chemin.startswith("/api/")
+
+    # Les clients d'API doivent recevoir du JSON, pas une page HTML de connexion.
+    if est_api:
+        return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
+
     if exc.status_code == 401:
-        return RedirectResponse(url="/login")
-    return templates.TemplateResponse("error.html", {"request": request, "error": exc.detail})
+        # On memorise la page demandee pour y revenir apres connexion.
+        cible = "/login?expired=1&next=" + quote(chemin, safe="/")
+        return RedirectResponse(url=cible, status_code=302)
+
+    return templates.TemplateResponse(
+        "error.html",
+        {"request": request, "error": exc.detail},
+        status_code=exc.status_code,
+    )
