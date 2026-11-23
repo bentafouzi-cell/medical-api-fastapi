@@ -14,8 +14,9 @@
         .badge-status { padding: 5px 10px; border-radius: 20px; font-size: 0.85em; }
         .bg-en-cours { background-color: #fff3cd; color: #856404; }
         .bg-termine { background-color: #d1e7dd; color: #0f5132; }
+        .edit-row { background-color: #f8f9fa; }
         @media print {
-            .navbar, .no-print, .edit-row { display: none !important; }
+            .navbar, .no-print { display: none !important; }
             body { background-color: white; }
             .card { box-shadow: none; border: none; margin: 0; padding: 0; }
             .container { max-width: 100%; margin: 0; padding: 0; }
@@ -34,7 +35,7 @@
                     </button>
                 </form>
                 {% endif %}
-
+                
                 <a href="/analyse/{{ analyse.id }}/pdf" class="btn btn-success btn-sm rounded-pill px-3 me-2">
                     <i class="fas fa-file-pdf me-1"></i> Télécharger PDF
                 </a>
@@ -61,6 +62,7 @@
                 {% endif %}
             </div>
             <div class="card-body">
+                <!-- Infos Patient -->
                 <div class="row mb-4">
                     <div class="col-md-6">
                         <p class="mb-1"><strong>Patient :</strong> {{ analyse.patient.nom }} {{ analyse.patient.prenom }}</p>
@@ -72,13 +74,48 @@
                     </div>
                 </div>
                 <hr>
+                
+                <!-- En-tête Résultats + Bouton Ajouter -->
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="text-secondary mb-0"><i class="fas fa-flask me-2"></i>Résultats Biologiques</h5>
-                    <span class="text-muted small no-print">
-                        <i class="fas fa-pen me-1"></i>Modifier &nbsp;|&nbsp; <i class="fas fa-trash me-1"></i>Supprimer
-                    </span>
+                    <button class="btn btn-sm btn-success rounded-pill no-print" data-bs-toggle="collapse" href="#addResultForm" role="button" aria-expanded="false" aria-controls="addResultForm">
+                        <i class="fas fa-plus me-1"></i> Ajouter un Résultat
+                    </button>
                 </div>
 
+                <!-- Formulaire d'Ajout (Caché par défaut) -->
+                <div class="collapse mb-4 no-print" id="addResultForm">
+                    <div class="card card-body bg-light border-0">
+                        <form action="/api/analyses/analyse/{{ analyse.id }}/add-result" method="POST" class="row g-2 align-items-end">
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">Nom du test</label>
+                                <input type="text" name="nom_test" class="form-control form-control-sm" placeholder="ex: Glycémie" required>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold">Valeur</label>
+                                <input type="text" name="valeur" class="form-control form-control-sm" placeholder="ex: 0.90" required>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold">Unité</label>
+                                <input type="text" name="unite" class="form-control form-control-sm" placeholder="ex: g/L">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold">Min Norme</label>
+                                <input type="text" name="norme_min" class="form-control form-control-sm" placeholder="Min">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold">Max Norme</label>
+                                <input type="text" name="norme_max" class="form-control form-control-sm" placeholder="Max">
+                            </div>
+                            <div class="col-12 text-end mt-2">
+                                <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-save me-1"></i> Enregistrer</button>
+                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="collapse">Annuler</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Tableau des Résultats -->
                 {% if analyse.resultats %}
                 <table class="table table-bordered table-hover align-middle">
                     <thead class="table-light">
@@ -97,6 +134,8 @@
                         {% set val = res.valeur|float %}
                         {% set min = res.norme_min|float if res.norme_min else None %}
                         {% set max = res.norme_max|float if res.norme_max else None %}
+                        
+                        <!-- Ligne Vue -->
                         <tr id="view-{{ res.id }}">
                             <td class="fw-semibold">{{ res.nom_test }}</td>
                             <td class="text-center fs-5">
@@ -133,7 +172,9 @@
                                 </button>
                             </td>
                         </tr>
-                        <tr id="edit-{{ res.id }}" class="edit-row" style="display: none; background-color: #f8f9fa;">
+
+                        <!-- Ligne Édition (Cachée) -->
+                        <tr id="edit-{{ res.id }}" class="edit-row" style="display: none;">
                             <td><input type="text" id="edit-nom-{{ res.id }}" class="form-control form-control-sm" value="{{ res.nom_test }}"></td>
                             <td><input type="text" id="edit-valeur-{{ res.id }}" class="form-control form-control-sm text-center" value="{{ res.valeur }}"></td>
                             <td><input type="text" id="edit-unite-{{ res.id }}" class="form-control form-control-sm text-center" value="{{ res.unite or '' }}"></td>
@@ -152,15 +193,22 @@
                     </tbody>
                 </table>
                 {% else %}
-                <div class="alert alert-info text-center">
-                    <i class="fas fa-info-circle me-2"></i> Aucun résultat détaillé n'a été saisi pour cette analyse.
+                <!-- Message si aucun résultat -->
+                <div class="alert alert-info text-center d-flex align-items-center justify-content-center no-print">
+                    <i class="fas fa-info-circle me-2"></i> 
+                    <span>Aucun résultat détaillé n'a été saisi pour cette analyse.</span>
+                    <button class="btn btn-sm btn-outline-primary ms-3" data-bs-toggle="collapse" href="#addResultForm" role="button">
+                        <i class="fas fa-plus me-1"></i> Ajouter le premier résultat
+                    </button>
                 </div>
                 {% endif %}
             </div>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Fonctions pour Modifier/Supprimer un résultat existant
         function editRow(id) {
             document.getElementById('view-' + id).style.display = 'none';
             document.getElementById('edit-' + id).style.display = '';
@@ -188,26 +236,24 @@
                 if (response.ok) {
                     window.location.reload();
                 } else {
-                    alert('Erreur lors de la mise à jour du résultat.');
+                    alert('Erreur lors de la mise à jour.');
                 }
             } catch (error) {
-                alert('Erreur de connexion au serveur.');
+                alert('Erreur de connexion.');
             }
         }
 
         async function deleteResult(id) {
-            if (!confirm('Êtes-vous sûr de vouloir supprimer ce résultat ?')) return;
+            if (!confirm('Supprimer ce résultat ?')) return;
             try {
-                const response = await fetch('/api/analyses/resultats/' + id + '/delete', {
-                    method: 'POST'
-                });
+                const response = await fetch('/api/analyses/resultats/' + id + '/delete', { method: 'POST' });
                 if (response.ok) {
                     window.location.reload();
                 } else {
                     alert('Erreur lors de la suppression.');
                 }
             } catch (error) {
-                alert('Erreur de connexion au serveur.');
+                alert('Erreur de connexion.');
             }
         }
     </script>

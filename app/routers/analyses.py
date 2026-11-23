@@ -203,3 +203,39 @@ def delete_analyse(
     db.commit()
 
     return RedirectResponse(url="/", status_code=303)
+
+@router.post("/analyse/{analyse_id}/add-result")
+def add_result_to_analyse(
+    analyse_id: int,
+    nom_test: str = Form(...),
+    valeur: str = Form(...),
+    unite: Optional[str] = Form(None),
+    norme_min: Optional[str] = Form(None),
+    norme_max: Optional[str] = Form(None),
+    db: Session = Depends(get_db),
+    current_user: models.UserDB = Depends(get_current_user)
+):
+    # Vérifier que l'analyse existe et appartient au labo
+    analyse = db.query(models.AnalyseDB).filter(
+        models.AnalyseDB.id == analyse_id,
+        models.AnalyseDB.labo_id == current_user.labo_id
+    ).first()
+
+    if not analyse:
+        raise HTTPException(status_code=404, detail="Analyse non trouvée")
+
+    # Créer le nouveau résultat
+    nouveau_resultat = models.Resultat(
+        analyse_id=analyse_id,
+        nom_test=nom_test.strip(),
+        valeur=valeur.strip(),
+        unite=(unite or "").strip(),
+        norme_min=(norme_min or "").strip(),
+        norme_max=(norme_max or "").strip()
+    )
+
+    db.add(nouveau_resultat)
+    db.commit()
+
+    # Redirection vers la page de détail pour voir le résultat ajouté
+    return RedirectResponse(url=f"/analyse/{analyse_id}", status_code=303)
