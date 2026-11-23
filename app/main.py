@@ -2,8 +2,6 @@ import os
 import sys
 from urllib.parse import quote
 
-# Les journaux contiennent des emoji. Sans UTF-8, la console Windows (cp1252)
-# leve une UnicodeEncodeError et l'application ne demarre pas.
 for _flux in (sys.stdout, sys.stderr):
     try:
         _flux.reconfigure(encoding="utf-8", errors="replace")
@@ -25,13 +23,9 @@ from .schema_repair import reparer_schema
 from . import models
 
 Base.metadata.create_all(bind=engine)
-# create_all ne modifie pas les tables existantes : on complete les colonnes
-# ajoutees au modele apres la creation de la table.
 reparer_schema()
 
-
 def verifier_configuration():
-    """Affiche dans les logs quelles variables sont presentes. Jamais les valeurs."""
     attendues = ["SECRET_KEY", "DATABASE_URL", "ADMIN_EMAIL", "ADMIN_PASSWORD",
                  "BREVO_API_KEY", "SENDER_EMAIL", "BASE_URL"]
     etat = " | ".join(
@@ -39,13 +33,11 @@ def verifier_configuration():
     )
     print(f"[config] {etat}")
 
-
 verifier_configuration()
 
 app = FastAPI(title="API Analyse Médicale SaaS")
 templates = Jinja2Templates(directory="templates")
 
-# Inclusion des routeurs
 app.include_router(analyses.router)
 app.include_router(auth.router)
 app.include_router(patients.router)
@@ -61,7 +53,6 @@ class NoCacheMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(NoCacheMiddleware)
 
-# Création de l'admin par défaut (sécurisé par variables d'environnement)
 def creer_admin_par_defaut():
     admin_email = os.getenv("ADMIN_EMAIL")
     admin_password = os.getenv("ADMIN_PASSWORD")
@@ -72,24 +63,27 @@ def creer_admin_par_defaut():
 
     db = SessionLocal()
     try:
-        admin = db.query(models.UserDB).filter(models.UserDB.is_admin == True).first()
-        if not admin:
+        admin = db.query(models.UserDB).filter(models.UserDB.email == admin_email).first()
+        if admin:
+            print(f"ℹ️ Compte admin existant : {admin.email}")
+            return
+
+        labo_admin = db.query(models.LaboDB).filter(models.LaboDB.nom == "MedicLab Admin").first()
+        if not labo_admin:
             labo_admin = models.LaboDB(nom="MedicLab Admin")
             db.add(labo_admin)
             db.commit()
             db.refresh(labo_admin)
-            
-            admin_user = models.UserDB(
-                email=admin_email,
-                hashed_password=get_password_hash(admin_password),
-                is_admin=True,
-                labo_id=labo_admin.id
-            )
-            db.add(admin_user)
-            db.commit()
-            print(f"✅ Compte admin créé : {admin_email}")
-        else:
-            print(f"ℹ️ Compte admin existant : {admin.email}")
+        
+        admin_user = models.UserDB(
+            email=admin_email,
+            hashed_password=get_password_hash(admin_password),
+            is_admin=True,
+            labo_id=labo_admin.id
+        )
+        db.add(admin_user)
+        db.commit()
+        print(f"✅ Compte admin créé : {admin_email}")
     finally:
         db.close()
 
@@ -195,12 +189,10 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     chemin = request.url.path
     est_api = chemin.startswith("/api/")
 
-    # Les clients d'API doivent recevoir du JSON, pas une page HTML de connexion.
     if est_api:
         return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
 
     if exc.status_code == 401:
-        # On memorise la page demandee pour y revenir apres connexion.
         cible = "/login?expired=1&next=" + quote(chemin, safe="/")
         return RedirectResponse(url=cible, status_code=302)
 
