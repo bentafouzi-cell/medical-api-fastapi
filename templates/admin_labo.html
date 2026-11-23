@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ labo.nom }} - Administration MedicLab</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --ink: #0f172a;
+            --muted: #64748b;
+            --line: #e2e8f0;
+            --bg: #f6f8fb;
+            --brand: #0e7490;
+            --brand-soft: #ecfeff;
+        }
+        body { background: var(--bg); color: var(--ink); font-family: 'Segoe UI', system-ui, sans-serif; }
+        .topbar { background: #fff; border-bottom: 1px solid var(--line); }
+        .brand { font-weight: 700; letter-spacing: -.02em; color: var(--ink); text-decoration: none; }
+        .brand .dot {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 30px; height: 30px; border-radius: 8px;
+            background: var(--brand); color: #fff; font-size: .85rem; margin-right: .55rem;
+        }
+        .pill-role {
+            font-size: .7rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+            color: var(--brand); background: var(--brand-soft); border: 1px solid #cffafe;
+            padding: .2rem .5rem; border-radius: 999px;
+        }
+        .page-title { font-weight: 700; letter-spacing: -.02em; }
+        .sub { color: var(--muted); font-size: .9rem; }
+
+        .head-card {
+            background: #fff; border: 1px solid var(--line); border-radius: 12px;
+            padding: 1.15rem 1.25rem;
+        }
+        .avatar {
+            width: 46px; height: 46px; border-radius: 11px; flex: 0 0 auto;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: .95rem; font-weight: 700; color: #fff; margin-right: .85rem;
+        }
+
+        .stat { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 1rem 1.15rem; height: 100%; }
+        .stat .label { font-size: .74rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; }
+        .stat .value { font-size: 1.75rem; font-weight: 700; line-height: 1.2; letter-spacing: -.03em; }
+        .stat .icon {
+            width: 34px; height: 34px; border-radius: 9px; display: flex;
+            align-items: center; justify-content: center; font-size: .85rem;
+        }
+
+        .panel { background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+        .panel-head { padding: .85rem 1.15rem; border-bottom: 1px solid var(--line); }
+        .panel-head h2 { font-size: 1rem; font-weight: 700; margin: 0; }
+        .panel-head .compte { font-size: .8rem; color: var(--muted); }
+
+        .table { margin: 0; }
+        .table thead th {
+            background: #fbfcfe; color: var(--muted); font-size: .72rem; text-transform: uppercase;
+            letter-spacing: .06em; font-weight: 600; border-bottom: 1px solid var(--line); white-space: nowrap;
+        }
+        .table tbody td { border-color: #f1f5f9; vertical-align: middle; }
+        .table tbody tr:hover { background: #fafcff; }
+
+        .chip { display: inline-block; padding: .18rem .55rem; border-radius: 6px; font-size: .78rem; font-weight: 600; }
+        .chip-green { background: #ecfdf5; color: #047857; }
+        .chip-red { background: #fef2f2; color: #b91c1c; }
+        .chip-blue { background: #eff6ff; color: #1d4ed8; }
+        .chip-violet { background: #f5f3ff; color: #6d28d9; }
+        .chip-grey { background: #f1f5f9; color: #64748b; }
+
+        .state { padding: 2.2rem 1rem; text-align: center; color: var(--muted); font-size: .9rem; }
+        .state i { font-size: 1.4rem; margin-bottom: .5rem; display: block; opacity: .5; }
+        .btn-ghost { border: 1px solid var(--line); background: #fff; color: var(--ink); }
+        .btn-ghost:hover { background: #f8fafc; border-color: #cbd5e1; }
+        .num { font-variant-numeric: tabular-nums; }
+    </style>
+</head>
+<body>
+    <nav class="topbar py-2 mb-4">
+        <div class="container-xl d-flex align-items-center">
+            <a class="brand d-flex align-items-center" href="/admin">
+                <span class="dot"><i class="fas fa-flask"></i></span>MedicLab
+            </a>
+            <span class="pill-role ms-3">Administration</span>
+            <div class="ms-auto d-flex gap-2">
+                <a href="/admin" class="btn btn-ghost btn-sm rounded-3 px-3">
+                    <i class="fas fa-arrow-left me-1"></i>Laboratoires
+                </a>
+                <a href="/logout" class="btn btn-ghost btn-sm rounded-3 px-3 text-danger">Déconnexion</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-xl pb-5">
+        <div class="head-card mb-4">
+            <div class="d-flex flex-wrap align-items-center gap-3">
+                <span class="avatar ms-0" style="background:#0e7490">
+                    {{ (labo.nom[:2] | upper) if labo.nom else '?' }}
+                </span>
+                <div class="flex-grow-1">
+                    <h1 class="page-title h4 mb-1">{{ labo.nom }}</h1>
+                    <div class="sub">
+                        Laboratoire #{{ labo.id }}
+                        — inscription : {{ labo.created_at.strftime('%d/%m/%Y') if labo.created_at else 'date inconnue' }}
+                    </div>
+                </div>
+                <div>
+                    {% if labo.is_active is sameas false %}
+                        <span class="chip chip-red">Suspendu</span>
+                    {% else %}
+                        <span class="chip chip-green">Actif</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-lg-2">
+                <div class="stat">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div><div class="label">Patients</div><div class="value num">{{ total_patients }}</div></div>
+                        <div class="icon" style="background:#ecfdf5;color:#047857"><i class="fas fa-hospital-user"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-2">
+                <div class="stat">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div><div class="label">Analyses</div><div class="value num">{{ total_analyses }}</div></div>
+                        <div class="icon" style="background:#f5f3ff;color:#6d28d9"><i class="fas fa-vial"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-2">
+                <div class="stat">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div><div class="label">En cours</div><div class="value num">{{ analyses_en_cours }}</div></div>
+                        <div class="icon" style="background:#eff6ff;color:#1d4ed8"><i class="fas fa-hourglass-half"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div><div class="label">Terminées</div><div class="value num">{{ analyses_terminees }}</div></div>
+                        <div class="icon" style="background:#ecfeff;color:#0e7490"><i class="fas fa-circle-check"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div><div class="label">Utilisateurs</div><div class="value num">{{ utilisateurs | length }}</div></div>
+                        <div class="icon" style="background:#f8fafc;color:#334155"><i class="fas fa-user-md"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel mb-4">
+            <div class="panel-head d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-user-md me-2 text-muted"></i>Utilisateurs du laboratoire</h2>
+                <span class="compte">{{ utilisateurs | length }}</span>
+            </div>
+            {% if utilisateurs %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Email</th>
+                            <th>Rôle</th>
+                            <th class="pe-4">État</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in utilisateurs %}
+                        <tr>
+                            <td class="ps-4">{{ u.email }}</td>
+                            <td>
+                                {% if u.is_admin %}<span class="chip chip-violet">Administrateur</span>
+                                {% else %}<span class="chip chip-grey">Utilisateur</span>{% endif %}
+                            </td>
+                            <td class="pe-4">
+                                {% if u.is_active is sameas false %}<span class="chip chip-red">Désactivé</span>
+                                {% else %}<span class="chip chip-green">Actif</span>{% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="state"><i class="fas fa-user-slash"></i>Aucun utilisateur rattaché.</div>
+            {% endif %}
+        </div>
+
+        <div class="panel mb-4">
+            <div class="panel-head d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-hospital-user me-2 text-muted"></i>Patients</h2>
+                <span class="compte">{{ total_patients }}</span>
+            </div>
+            {% if patients %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Nom</th>
+                            <th>Prénom</th>
+                            <th>Âge</th>
+                            <th>Sexe</th>
+                            <th>Téléphone</th>
+                            <th>Analyses</th>
+                            <th class="pe-4">Créé le</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in patients %}
+                        <tr>
+                            <td class="ps-4 fw-semibold">{{ p.nom }}</td>
+                            <td>{{ p.prenom }}</td>
+                            <td class="num">{{ p.age if p.age is not none else '—' }}</td>
+                            <td>{{ p.sexe if p.sexe else '—' }}</td>
+                            <td class="num">{{ p.telephone if p.telephone else '—' }}</td>
+                            <td><span class="chip chip-violet">{{ p.analyses | length }}</span></td>
+                            <td class="pe-4 sub">{{ p.created_at.strftime('%d/%m/%Y') if p.created_at else '—' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="state"><i class="fas fa-inbox"></i>Aucun patient enregistré dans ce laboratoire.</div>
+            {% endif %}
+        </div>
+
+        <div class="panel">
+            <div class="panel-head d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-vial me-2 text-muted"></i>Analyses</h2>
+                <span class="compte">{{ total_analyses }}</span>
+            </div>
+            {% if analyses %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Date</th>
+                            <th>Patient</th>
+                            <th>Type</th>
+                            <th>Statut</th>
+                            <th class="pe-4">Résultats</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in analyses %}
+                        <tr>
+                            <td class="ps-4 sub">{{ a.created_at.strftime('%d/%m/%Y %H:%M') if a.created_at else '—' }}</td>
+                            <td>
+                                {% if a.patient %}
+                                    {{ a.patient.prenom }} {{ a.patient.nom }}
+                                {% else %}
+                                    <span class="text-muted">patient absent</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ a.type_analyse }}</td>
+                            <td>
+                                {% if a.statut == 'Terminé' %}<span class="chip chip-green">Terminé</span>
+                                {% elif a.statut == 'En cours' %}<span class="chip chip-blue">En cours</span>
+                                {% else %}<span class="chip chip-grey">{{ a.statut or '—' }}</span>{% endif %}
+                            </td>
+                            <td class="pe-4"><span class="chip chip-violet">{{ a.resultats | length }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="state"><i class="fas fa-flask-empty"></i>Aucune analyse enregistrée dans ce laboratoire.</div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

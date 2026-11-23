@@ -121,6 +121,53 @@ def admin_page(request: Request, current_user: models.UserDB = Depends(get_curre
         raise HTTPException(status_code=403, detail="Accès refusé")
     return templates.TemplateResponse("admin.html", {"request": request})
 
+@app.get("/admin/labo/{labo_id}")
+def admin_labo_page(labo_id: int, request: Request, db: Session = Depends(get_db),
+                    current_user: models.UserDB = Depends(get_current_user)):
+    """Consultation en lecture seule des donnees d'un laboratoire.
+
+    Aucun formulaire ici : l'administrateur observe, il ne saisit pas de
+    resultats a la place d'un biologiste. La responsabilite medicale reste
+    au laboratoire concerne.
+    """
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Accès refusé")
+
+    labo = db.query(models.LaboDB).filter(models.LaboDB.id == labo_id).first()
+    if not labo:
+        raise HTTPException(status_code=404, detail="Laboratoire non trouvé")
+
+    patients = (
+        db.query(models.Patient)
+        .filter(models.Patient.labo_id == labo.id)
+        .order_by(models.Patient.nom.asc(), models.Patient.prenom.asc())
+        .all()
+    )
+    analyses = (
+        db.query(models.AnalyseDB)
+        .filter(models.AnalyseDB.labo_id == labo.id)
+        .order_by(models.AnalyseDB.created_at.desc())
+        .all()
+    )
+    utilisateurs = (
+        db.query(models.UserDB)
+        .filter(models.UserDB.labo_id == labo.id)
+        .order_by(models.UserDB.email.asc())
+        .all()
+    )
+
+    return templates.TemplateResponse("admin_labo.html", {
+        "request": request,
+        "labo": labo,
+        "patients": patients,
+        "analyses": analyses,
+        "utilisateurs": utilisateurs,
+        "total_patients": len(patients),
+        "total_analyses": len(analyses),
+        "analyses_en_cours": sum(1 for a in analyses if a.statut == "En cours"),
+        "analyses_terminees": sum(1 for a in analyses if a.statut == "Terminé"),
+    })
+
 @app.get("/admin/dashboard")
 def admin_dashboard(request: Request, current_user: models.UserDB = Depends(get_current_user)):
     if not current_user.is_admin:

@@ -68,6 +68,8 @@
         .btn-action.warning:hover { background: #fefce8; }
         .btn-action.success { color: #16a34a; }
         .btn-action.success:hover { background: #ecfdf5; }
+        .btn-action.view { color: #0e7490; }
+        .btn-action.view:hover { background: #ecfeff; }
     </style>
 </head>
 <body>
@@ -232,6 +234,7 @@
                     <td class="text-center">${chip(l.nb_analyses, 'chip-violet')}</td>
                     <td class="text-center">${statut}</td>
                     <td class="text-end pe-4">
+                        <a class="btn-action view" href="/admin/labo/${l.id}" title="Voir les donnees"><i class="fas fa-eye"></i></a>
                         ${btnToggle}
                         <button class="btn-action danger" onclick="supprimerLabo(${l.id})" title="Supprimer"><i class="fas fa-trash"></i></button>
                     </td>
