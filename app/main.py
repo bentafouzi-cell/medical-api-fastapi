@@ -113,6 +113,8 @@ def reset_password_page(request: Request):
 
 @app.get("/patients")
 def patients_page(request: Request, current_user: models.UserDB = Depends(get_current_user)):
+    if current_user.is_admin:
+        return RedirectResponse(url="/admin", status_code=302)
     return templates.TemplateResponse("patients.html", {"request": request})
 
 @app.get("/admin")
@@ -178,6 +180,11 @@ def admin_dashboard(request: Request, current_user: models.UserDB = Depends(get_
     
 @app.get("/")
 def read_root(request: Request, db: Session = Depends(get_db), current_user: models.UserDB = Depends(get_current_user)):
+    # Un administrateur n'a pas d'espace de travail de laboratoire : son point
+    # d'entree est la supervision des comptes clients. Ses propres donnees
+    # restent consultables via /admin/labo/{id}.
+    if current_user.is_admin:
+        return RedirectResponse(url="/admin", status_code=302)
     patients_list = db.query(models.Patient).filter(models.Patient.labo_id == current_user.labo_id).all()
     analyses_list = db.query(models.AnalyseDB).filter(models.AnalyseDB.labo_id == current_user.labo_id).order_by(models.AnalyseDB.created_at.desc()).all()
 
