@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Détail Analyse - {{ analyse.patient.nom }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
+        .navbar { background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .result-normal { color: #198754; font-weight: bold; }
+        .result-abnormal { color: #dc3545; font-weight: bold; }
+        .badge-status { padding: 5px 10px; border-radius: 20px; font-size: 0.85em; }
+        .bg-en-cours { background-color: #fff3cd; color: #856404; }
+        .bg-termine { background-color: #d1e7dd; color: #0f5132; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="/"><i class="fas fa-heartbeat me-2"></i>MedicLab</a>
+            <div class="ms-auto"><a href="/" class="btn btn-outline-secondary btn-sm rounded-pill px-3"><i class="fas fa-arrow-left me-1"></i> Retour</a></div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card mb-4">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h4 class="mb-0 text-primary">
+                    <i class="fas fa-file-medical me-2"></i>Rapport d'Analyse
+                </h4>
+                {% if analyse.statut == 'Terminé' %}
+                    <span class="badge badge-status bg-termine">Terminé</span>
+                {% else %}
+                    <span class="badge badge-status bg-en-cours">En cours</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Patient :</strong> {{ analyse.patient.nom }} {{ analyse.patient.prenom }}</p>
+                        <p class="mb-1"><strong>Type :</strong> {{ analyse.type_analyse }}</p>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <p class="mb-1"><strong>Date :</strong> {{ analyse.created_at.strftime('%d/%m/%Y à %H:%M') }}</p>
+                        <p class="mb-1 text-muted small">ID Analyse : #{{ analyse.id }}</p>
+                    </div>
+                </div>
+                <hr>
+                <h5 class="text-secondary mb-3"><i class="fas fa-flask me-2"></i>Résultats Biologiques</h5>
+                
+                {% if analyse.resultats %}
+                <table class="table table-bordered table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Test</th>
+                            <th class="text-center">Résultat</th>
+                            <th class="text-center">Unité</th>
+                            <th class="text-center">Valeurs de Référence</th>
+                            <th class="text-center">Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for res in analyse.resultats %}
+                        <tr>
+                            <td class="fw-semibold">{{ res.nom_test }}</td>
+                            <td class="text-center fs-5">
+                                {% set val = res.valeur|float %}
+                                {% set min = res.norme_min|float if res.norme_min else None %}
+                                {% set max = res.norme_max|float if res.norme_max else None %}
+                                
+                                {% if min is not none and max is not none %}
+                                    {% if val < min or val > max %}
+                                        <span class="result-abnormal">{{ res.valeur }}</span>
+                                    {% else %}
+                                        <span class="result-normal">{{ res.valeur }}</span>
+                                    {% endif %}
+                                {% else %}
+                                    {{ res.valeur }}
+                                {% endif %}
+                            </td>
+                            <td class="text-center text-muted">{{ res.unite }}</td>
+                            <td class="text-center">
+                                {% if res.norme_min and res.norme_max %}
+                                    {{ res.norme_min }} - {{ res.norme_max }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if min is not none and max is not none %}
+                                    {% if val < min or val > max %}
+                                        <i class="fas fa-exclamation-triangle text-danger"></i> <span class="text-danger small">Hors norme</span>
+                                    {% else %}
+                                        <i class="fas fa-check-circle text-success"></i> <span class="text-success small">Normal</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted small">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle me-2"></i> Aucun résultat détaillé n'a été saisi pour cette analyse.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -25,7 +25,6 @@
     </nav>
     <div class="container">
         
-        <!-- FORMULAIRE NOUVELLE ANALYSE AVEC RÉSULTATS -->
         <div class="row justify-content-center">
             <div class="col-md-10">
                 <div class="card">
@@ -34,7 +33,6 @@
                         
                         <form id="analyseForm" action="/api/analyses/create" method="POST">
                             <div class="row g-3">
-                                <!-- PATIENT (LISTE DÉROULANTE) -->
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Patient</label>
                                     <select name="patient_id" class="form-select" required>
@@ -46,7 +44,6 @@
                                     <div class="form-text text-muted">Pas de patient ? <a href="/patients" target="_blank">Créer un nouveau patient</a>.</div>
                                 </div>
 
-                                <!-- TYPE ANALYSE -->
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Type d'analyse</label>
                                     <select name="type_analyse" id="type_analyse" class="form-select" required>
@@ -59,7 +56,6 @@
                                 </div>
                             </div>
 
-                            <!-- SECTION RÉSULTATS DÉTAILLÉS (NOUVEAU ÉTAPE 2) -->
                             <div class="mt-4">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <h6 class="mb-0 text-secondary fw-bold"><i class="fas fa-flask me-2"></i>Résultats Détaillés (Optionnel)</h6>
@@ -67,10 +63,7 @@
                                         <i class="fas fa-plus me-1"></i> Ajouter un résultat
                                     </button>
                                 </div>
-                                
-                                <div id="resultsContainer">
-                                    <!-- Les lignes seront ajoutées ici par JS -->
-                                </div>
+                                <div id="resultsContainer"></div>
                             </div>
 
                             <div class="col-12 mt-4">
@@ -82,7 +75,6 @@
             </div>
         </div>
 
-        <!-- HISTORIQUE DES ANALYSES -->
         <div class="row">
             <div class="col-12">
                 <div class="card">
@@ -99,9 +91,10 @@
                                         <td class="text-muted small">{{ analyse.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
                                         <td>{% if analyse.statut == 'Terminé' %}<span class="badge badge-status bg-termine">Terminé</span>{% else %}<span class="badge badge-status bg-en-cours">En cours</span>{% endif %}</td>
                                         <td class="text-end pe-4">
-                                            <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="alert('Détails des résultats à venir (Étape 3 PDF)')">
+                                            <!-- LE BOUTON VOIR CORRIGÉ ICI -->
+                                            <a href="/analyse/{{ analyse.id }}" class="btn btn-sm btn-outline-primary rounded-pill">
                                                 <i class="fas fa-eye me-1"></i> Voir
-                                            </button>
+                                            </a>
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -126,7 +119,7 @@
             const row = document.createElement('div');
             row.className = 'result-row row g-2';
             row.innerHTML = `
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <input type="text" name="test_name_${resultCount}" class="form-control form-control-sm" placeholder="Nom du test (ex: Glycémie)" required>
                 </div>
                 <div class="col-md-2">
@@ -141,28 +134,15 @@
                 <div class="col-md-2">
                     <input type="text" name="test_max_${resultCount}" class="form-control form-control-sm" placeholder="Max Norme">
                 </div>
-                <div class="col-12 text-end mt-1">
-                    <span class="btn-remove btn-sm" onclick="this.parentElement.parentElement.remove()">
-                        <i class="fas fa-trash"></i> Supprimer
-                    </span>
+                <div class="col-md-1 d-flex align-items-center">
+                    <span class="btn-remove btn-sm" onclick="this.closest('.result-row').remove()"><i class="fas fa-trash"></i></span>
                 </div>
             `;
             container.appendChild(row);
         }
 
-        // Préparation des données avant envoi pour le backend Python
         document.getElementById('analyseForm').addEventListener('submit', function(e) {
-            // On laisse le formulaire s'envoyer normalement, mais on prépare les champs cachés si besoin
-            // Ici, le backend attend des listes séparées par '||'
-            // Le backend Python actuel est configuré pour lire les champs individuels test_name_1, etc. 
-            // Donc on n'a pas besoin de modifier l'envoi, le backend va les lire un par un.
-            // Mais pour simplifier le backend précédent, on va juste laisser tel quel.
-            // Le backend Python fourni précédemment attendait des chaînes séparées par ||.
-            // Adaptons le JS pour concaténer si le backend attend ça, OU changeons le backend pour lire les index.
-            
-            // Pour l'instant, avec le backend donné précédemment (qui split par ||), on doit construire ces chaînes.
             let names = [], values = [], units = [], mins = [], maxs = [];
-            
             for(let i=1; i<=resultCount; i++) {
                 const nameInput = document.querySelector(`input[name="test_name_${i}"]`);
                 if(nameInput && nameInput.value) {
@@ -173,38 +153,19 @@
                     maxs.push(document.querySelector(`input[name="test_max_${i}"]`).value || '');
                 }
             }
-
             if(names.length > 0) {
-                // Ajout de champs cachés pour le backend
-                const inputNames = document.createElement('input');
-                inputNames.type = 'hidden';
-                inputNames.name = 'result_names';
-                inputNames.value = names.join('||');
-                this.appendChild(inputNames);
-
-                const inputValues = document.createElement('input');
-                inputValues.type = 'hidden';
-                inputValues.name = 'result_values';
-                inputValues.value = values.join('||');
-                this.appendChild(inputValues);
-
-                const inputUnits = document.createElement('input');
-                inputUnits.type = 'hidden';
-                inputUnits.name = 'result_units';
-                inputUnits.value = units.join('||');
-                this.appendChild(inputUnits);
-
-                const inputMins = document.createElement('input');
-                inputMins.type = 'hidden';
-                inputMins.name = 'result_mins';
-                inputMins.value = mins.join('||');
-                this.appendChild(inputMins);
-
-                const inputMaxs = document.createElement('input');
-                inputMaxs.type = 'hidden';
-                inputMaxs.name = 'result_maxs';
-                inputMaxs.value = maxs.join('||');
-                this.appendChild(inputMaxs);
+                const fields = [
+                    {name: 'result_names', val: names.join('||')},
+                    {name: 'result_values', val: values.join('||')},
+                    {name: 'result_units', val: units.join('||')},
+                    {name: 'result_mins', val: mins.join('||')},
+                    {name: 'result_maxs', val: maxs.join('||')}
+                ];
+                fields.forEach(f => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden'; input.name = f.name; input.value = f.val;
+                    this.appendChild(input);
+                });
             }
         });
     </script>

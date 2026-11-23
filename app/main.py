@@ -57,6 +57,25 @@ def logout(request: Request):
     response = RedirectResponse(url="/login", status_code=302)
     response.delete_cookie(key="access_token")
     return response
+    @app.get("/analyse/{analyse_id}")
+def analyse_detail_page(
+    analyse_id: int, 
+    request: Request, 
+    db: Session = Depends(get_db), 
+    current_user: models.UserDB = Depends(get_current_user)
+):
+    analyse = db.query(models.AnalyseDB).filter(
+        models.AnalyseDB.id == analyse_id,
+        models.AnalyseDB.labo_id == current_user.labo_id
+    ).first()
+    
+    if not analyse:
+        raise HTTPException(status_code=404, detail="Analyse non trouvée")
+        
+    return templates.TemplateResponse("detail.html", {
+        "request": request,
+        "analyse": analyse
+    })
 
 # Gestionnaire d'erreurs 401 (Redirige vers login si non autorisé)
 @app.exception_handler(StarletteHTTPException)
