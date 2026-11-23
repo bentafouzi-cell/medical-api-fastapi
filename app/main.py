@@ -8,13 +8,11 @@ from .routers import analyses, auth, patients
 from .auth import get_current_user
 from . import models
 
-# Création automatique des tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="API Analyse Médicale SaaS")
 templates = Jinja2Templates(directory="templates")
 
-# Inclusion des routeurs
 app.include_router(analyses.router)
 app.include_router(auth.router)
 app.include_router(patients.router)
@@ -39,45 +37,29 @@ def reset_password_page(request: Request):
 def patients_page(request: Request, current_user: models.UserDB = Depends(get_current_user)):
     return templates.TemplateResponse("patients.html", {"request": request})
 
-# ROUTE RACINE SÉCURISÉE (Nécessite d'être connecté)
 @app.get("/")
 def read_root(request: Request, db: Session = Depends(get_db), current_user: models.UserDB = Depends(get_current_user)):
     patients_list = db.query(models.Patient).filter(models.Patient.labo_id == current_user.labo_id).all()
     analyses_list = db.query(models.AnalyseDB).filter(models.AnalyseDB.labo_id == current_user.labo_id).order_by(models.AnalyseDB.created_at.desc()).all()
-    
     return templates.TemplateResponse("index.html", {
         "request": request, 
         "patients": patients_list,
         "analyses": analyses_list
     })
 
-# NOUVELLE ROUTE : DÉCONNEXION (Supprime le cookie et redirige)
 @app.get("/logout")
 def logout(request: Request):
     response = RedirectResponse(url="/login", status_code=302)
     response.delete_cookie(key="access_token")
     return response
-    @app.get("/analyse/{analyse_id}")
-def analyse_detail_page(
-    analyse_id: int, 
-    request: Request, 
-    db: Session = Depends(get_db), 
-    current_user: models.UserDB = Depends(get_current_user)
-):
-    analyse = db.query(models.AnalyseDB).filter(
-        models.AnalyseDB.id == analyse_id,
-        models.AnalyseDB.labo_id == current_user.labo_id
-    ).first()
-    
+
+@app.get("/analyse/{analyse_id}")
+def analyse_detail_page(analyse_id: int, request: Request, db: Session = Depends(get_db), current_user: models.UserDB = Depends(get_current_user)):
+    analyse = db.query(models.AnalyseDB).filter(models.AnalyseDB.id == analyse_id, models.AnalyseDB.labo_id == current_user.labo_id).first()
     if not analyse:
         raise HTTPException(status_code=404, detail="Analyse non trouvée")
-        
-    return templates.TemplateResponse("detail.html", {
-        "request": request,
-        "analyse": analyse
-    })
+    return templates.TemplateResponse("detail.html", {"request": request, "analyse": analyse})
 
-# Gestionnaire d'erreurs 401 (Redirige vers login si non autorisé)
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     if exc.status_code == 401:
