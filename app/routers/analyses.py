@@ -148,25 +148,14 @@ def update_resultat(
     if not analyse:
         raise HTTPException(status_code=403, detail="Accès refusé")
 
-    # DEBUG LOGS - Pour voir exactement ce qui se passe
-    print(f"🔍 UPDATE Resultat ID={resultat_id}")
-    print(f"   Ancienne valeur: {resultat.valeur}")
-    print(f"   Nouvelle valeur reçue: {valeur}")
-    
-    # MISE À JOUR DES CHAMPS
     resultat.nom_test = nom_test.strip()
     resultat.valeur = valeur.strip()
     resultat.unite = (unite or "").strip()
     resultat.norme_min = (norme_min or "").strip()
     resultat.norme_max = (norme_max or "").strip()
 
-    print(f"   Valeur après assignment: {resultat.valeur}")
-
-    # FORCER LA PERSISTANCE - C'est la clé du fix !
     db.add(resultat)
     db.commit()
-    
-    print(f"   ✅ Commit réussi, valeur finale en DB: {resultat.valeur}")
 
     return {"message": "Résultat mis à jour", "id": resultat.id, "new_value": resultat.valeur}
 
@@ -193,7 +182,9 @@ def delete_resultat(
     db.commit()
 
     return {"message": "Résultat supprimé"}
-    @router.post("/{analyse_id}/delete")
+
+
+@router.post("/{analyse_id}/delete")
 def delete_analyse(
     analyse_id: int,
     db: Session = Depends(get_db),
@@ -207,10 +198,7 @@ def delete_analyse(
     if not analyse:
         raise HTTPException(status_code=404, detail="Analyse non trouvée")
 
-    # Supprimer d'abord tous les résultats liés (cascade)
     db.query(models.Resultat).filter(models.Resultat.analyse_id == analyse_id).delete()
-    
-    # Puis supprimer l'analyse
     db.delete(analyse)
     db.commit()
 
