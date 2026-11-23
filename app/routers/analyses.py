@@ -8,17 +8,18 @@ from ..auth import get_current_user
 
 router = APIRouter(prefix="/api/analyses", tags=["Analyses"])
 
+
 @router.post("/create")
 def create_analyse(
     request: Request,
-    patient_id: str = Form(...), 
+    patient_id: str = Form(...),
     type_analyse: str = Form(...),
     result_names: Optional[str] = Form(None),
     result_values: Optional[str] = Form(None),
     result_units: Optional[str] = Form(None),
     result_mins: Optional[str] = Form(None),
     result_maxs: Optional[str] = Form(None),
-    db: Session = Depends(get_db), 
+    db: Session = Depends(get_db),
     current_user: models.UserDB = Depends(get_current_user)
 ):
     try:
@@ -27,10 +28,10 @@ def create_analyse(
         raise HTTPException(status_code=400, detail="ID Patient invalide")
 
     patient = db.query(models.Patient).filter(
-        models.Patient.id == p_id, 
+        models.Patient.id == p_id,
         models.Patient.labo_id == current_user.labo_id
     ).first()
-    
+
     if not patient:
         raise HTTPException(status_code=404, detail="Patient non trouvé ou non autorisé")
 
@@ -40,7 +41,7 @@ def create_analyse(
         statut="En cours",
         labo_id=current_user.labo_id
     )
-    
+
     db.add(nouvelle_analyse)
     db.commit()
     db.refresh(nouvelle_analyse)
@@ -63,7 +64,6 @@ def create_analyse(
                     norme_max=maxs[i].strip() if i < len(maxs) else ""
                 )
                 db.add(res)
-        
         db.commit()
 
     return RedirectResponse(url="/", status_code=303)
@@ -123,3 +123,73 @@ def valider_analyse(
     db.commit()
 
     return RedirectResponse(url=f"/analyse/{analyse_id}", status_code=303)
+
+
+@router.post("/resultats/{resultat_id}/update")
+def update_resultat(
+    resultat_id: int,
+    nom_test: str = Form(...),
+    valeur: str = Form(...),
+    unite: Optional[str] = Form(None),
+    norme_min: Optional[str] = Form(None),
+    norme_max: Optional[str] = Form(None),
+    db: Session = Depends(get_db),
+    current_user: models.UserDB = Depends(get_current_user)
+):
+    resultat = db.query(models.Resultat).filter(models.Resultat.id == resultat_id).first()
+    if not resultat:
+        raise HTTPException(status_code=404, detail="Résultat non trouvé")
+
+    analyse = db.query(models.AnalyseDB).filter(
+        models.AnalyseDB.id == resultat.analyse_id,
+        models.AnalyseDB.labo_id == current_user.labo_id
+    ).first()
+
+    if not analyse:
+        raise HTTPException(status_code=403, detail="Accès refusé")
+
+    # DEBUG LOGS - Pour voir exactement ce qui se passe
+    print(f"🔍 UPDATE Resultat ID={resultat_id}")
+    print(f"   Ancienne valeur: {resultat.valeur}")
+    print(f"   Nouvelle valeur reçue: {valeur}")
+    
+    # MISE À JOUR DES CHAMPS
+    resultat.nom_test = nom_test.strip()
+    resultat.valeur = valeur.strip()
+    resultat.unite = (unite or "").strip()
+    resultat.norme_min = (norme_min or "").strip()
+    resultat.norme_max = (norme_max or "").strip()
+
+    print(f"   Valeur après assignment: {resultat.valeur}")
+
+    # FORCER LA PERSISTANCE - C'est la clé du fix !
+    db.session.add(resultat)
+    db.commit()
+    
+    print(f"   ✅ Commit réussi, valeur finale en DB: {resultat.valeur}")
+
+    return {"message": "Résultat mis à jour", "id": resultat.id, "new_value": resultat.valeur}
+
+
+@router.post("/resultats/{resultat_id}/delete")
+def delete_resultat(
+    resultat_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.UserDB = Depends(get_current_user)
+):
+    resultat = db.query(models.Resultat).filter(models.Resultat.id == resultat_id).first()
+    if not resultat:
+        raise HTTPException(status_code=404, detail="Résultat non trouvé")
+
+    analyse = db.query(models.AnalyseDB).filter(
+        models.AnalyseDB.id == resultat.analyse_id,
+        models.AnalyseDB.labo_id == current_user.labo_id
+    ).first()
+
+    if not analyse:
+        raise HTTPException(status_code=403, detail="Accès refusé")
+
+    db.delete(resultat)
+    db.commit()
+
+    return {"message": "Résultat supprimé"}
