@@ -29,6 +29,7 @@
 
     <div class="container">
 
+        <!-- DASHBOARD STATISTIQUES -->
         <h4 class="fw-bold mb-3"><i class="fas fa-chart-line me-2 text-primary"></i>Activité du Laboratoire</h4>
 
         <div class="row">
@@ -94,6 +95,7 @@
             </div>
         </div>
 
+        <!-- FORMULAIRE NOUVELLE ANALYSE -->
         <div class="row justify-content-center">
             <div class="col-md-10">
                 <div class="card">
@@ -144,26 +146,53 @@
             </div>
         </div>
 
+        <!-- HISTORIQUE DES ANALYSES AVEC RECHERCHE -->
         <div class="row">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header bg-white py-3"><h5 class="mb-0"><i class="fas fa-list-alt me-2 text-muted"></i>Historique des Analyses</h5></div>
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <h5 class="mb-0"><i class="fas fa-list-alt me-2 text-muted"></i>Historique des Analyses</h5>
+                        
+                        <!-- BARRE DE RECHERCHE -->
+                        <div class="input-group" style="max-width: 350px;">
+                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
+                            <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Rechercher (Patient, Type, Statut)...">
+                            <button class="btn btn-outline-secondary border-start-0" type="button" onclick="clearSearch()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
                     <div class="card-body p-0">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light"><tr><th class="ps-4">Patient</th><th>Type</th><th>Date</th><th>Statut</th><th class="text-end pe-4">Actions</th></tr></thead>
+                        <table class="table table-hover align-middle mb-0" id="analysesTable">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">Patient</th>
+                                    <th>Type</th>
+                                    <th>Date</th>
+                                    <th>Statut</th>
+                                    <th class="text-end pe-4">Actions</th>
+                                </tr>
+                            </thead>
                             <tbody>
                                 {% if analyses %}
                                     {% for analyse in analyses %}
-                                    <tr>
-                                        <td class="ps-4 fw-semibold">{{ analyse.patient.nom }} {{ analyse.patient.prenom }}</td>
-                                        <td><span class="badge bg-light text-dark border">{{ analyse.type_analyse }}</span></td>
+                                    <tr class="analysis-row">
+                                        <td class="ps-4 fw-semibold patient-name">{{ analyse.patient.nom }} {{ analyse.patient.prenom }}</td>
+                                        <td><span class="badge bg-light text-dark border analysis-type">{{ analyse.type_analyse }}</span></td>
                                         <td class="text-muted small">{{ analyse.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
-                                        <td>{% if analyse.statut == 'Terminé' %}<span class="badge badge-status bg-termine">Terminé</span>{% else %}<span class="badge badge-status bg-en-cours">En cours</span>{% endif %}</td>
+                                        <td>
+                                            {% if analyse.statut == 'Terminé' %}
+                                                <span class="badge badge-status bg-termine analysis-status">Terminé</span>
+                                            {% else %}
+                                                <span class="badge badge-status bg-en-cours analysis-status">En cours</span>
+                                            {% endif %}
+                                        </td>
                                         <td class="text-end pe-4">
                                             <a href="/analyse/{{ analyse.id }}" class="btn btn-sm btn-outline-primary rounded-pill me-1">
                                                 <i class="fas fa-eye me-1"></i> Voir
                                             </a>
-                                            <form action="/api/analyses/{{ analyse.id }}/delete" method="POST" class="d-inline" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette analyse et tous ses résultats ? Cette action est irréversible.');">
+                                            <form action="/api/analyses/{{ analyse.id }}/delete" method="POST" class="d-inline" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette analyse ?');">
                                                 <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
@@ -176,6 +205,13 @@
                                 {% endif %}
                             </tbody>
                         </table>
+                        
+                        <!-- MESSAGE SI AUCUN RÉSULTAT TROUVÉ -->
+                        <div id="noResults" class="text-center py-5" style="display: none;">
+                            <i class="fas fa-search fa-3x mb-3 d-block text-secondary opacity-50"></i>
+                            <p class="text-muted">Aucune analyse ne correspond à votre recherche.</p>
+                            <button class="btn btn-sm btn-outline-secondary mt-2" onclick="clearSearch()">Effacer la recherche</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -183,6 +219,8 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- SCRIPT POUR LES RÉSULTATS DYNAMIQUES -->
     <script>
         let resultCount = 0;
 
@@ -241,6 +279,44 @@
                 });
             }
         });
+
+        // SCRIPT DE RECHERCHE EN TEMPS RÉEL
+        const searchInput = document.getElementById('searchInput');
+        const table = document.getElementById('analysesTable');
+        const rows = table.querySelectorAll('.analysis-row');
+        const noResults = document.getElementById('noResults');
+
+        searchInput.addEventListener('keyup', function() {
+            const term = this.value.toLowerCase();
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const patient = row.querySelector('.patient-name').textContent.toLowerCase();
+                const type = row.querySelector('.analysis-type').textContent.toLowerCase();
+                const status = row.querySelector('.analysis-status').textContent.toLowerCase();
+                
+                if (patient.includes(term) || type.includes(term) || status.includes(term)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            if (visibleCount === 0 && term.length > 0) {
+                table.style.display = 'none';
+                noResults.style.display = 'block';
+            } else {
+                table.style.display = 'table';
+                noResults.style.display = 'none';
+            }
+        });
+
+        function clearSearch() {
+            searchInput.value = '';
+            searchInput.dispatchEvent(new Event('keyup'));
+            searchInput.focus();
+        }
     </script>
 </body>
 </html>
