@@ -28,22 +28,15 @@
     </nav>
 
     <div class="container">
-
         <!-- DASHBOARD STATISTIQUES -->
         <h4 class="fw-bold mb-3"><i class="fas fa-chart-line me-2 text-primary"></i>Activité du Laboratoire</h4>
-
         <div class="row">
             <div class="col-md-3 col-sm-6">
                 <div class="card stat-card">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <p class="text-muted mb-1 small fw-semibold">Total Patients</p>
-                                <h3 class="mb-0 fw-bold">{{ total_patients }}</h3>
-                            </div>
-                            <div class="stat-icon" style="background-color: rgba(13,110,253,0.1); color: #0d6efd;">
-                                <i class="fas fa-users"></i>
-                            </div>
+                            <div><p class="text-muted mb-1 small fw-semibold">Total Patients</p><h3 class="mb-0 fw-bold">{{ total_patients }}</h3></div>
+                            <div class="stat-icon" style="background-color: rgba(13,110,253,0.1); color: #0d6efd;"><i class="fas fa-users"></i></div>
                         </div>
                     </div>
                 </div>
@@ -52,13 +45,8 @@
                 <div class="card stat-card">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <p class="text-muted mb-1 small fw-semibold">Total Analyses</p>
-                                <h3 class="mb-0 fw-bold">{{ total_analyses }}</h3>
-                            </div>
-                            <div class="stat-icon" style="background-color: rgba(111,66,193,0.1); color: #6f42c1;">
-                                <i class="fas fa-flask"></i>
-                            </div>
+                            <div><p class="text-muted mb-1 small fw-semibold">Total Analyses</p><h3 class="mb-0 fw-bold">{{ total_analyses }}</h3></div>
+                            <div class="stat-icon" style="background-color: rgba(111,66,193,0.1); color: #6f42c1;"><i class="fas fa-flask"></i></div>
                         </div>
                     </div>
                 </div>
@@ -67,13 +55,8 @@
                 <div class="card stat-card">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <p class="text-muted mb-1 small fw-semibold">En Cours</p>
-                                <h3 class="mb-0 fw-bold">{{ analyses_en_cours }}</h3>
-                            </div>
-                            <div class="stat-icon" style="background-color: rgba(255,193,7,0.15); color: #b58900;">
-                                <i class="fas fa-hourglass-half"></i>
-                            </div>
+                            <div><p class="text-muted mb-1 small fw-semibold">En Cours</p><h3 class="mb-0 fw-bold">{{ analyses_en_cours }}</h3></div>
+                            <div class="stat-icon" style="background-color: rgba(255,193,7,0.15); color: #b58900;"><i class="fas fa-hourglass-half"></i></div>
                         </div>
                     </div>
                 </div>
@@ -82,13 +65,8 @@
                 <div class="card stat-card">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <p class="text-muted mb-1 small fw-semibold">Terminées</p>
-                                <h3 class="mb-0 fw-bold">{{ analyses_terminees }}</h3>
-                            </div>
-                            <div class="stat-icon" style="background-color: rgba(25,135,84,0.1); color: #198754;">
-                                <i class="fas fa-check-circle"></i>
-                            </div>
+                            <div><p class="text-muted mb-1 small fw-semibold">Terminées</p><h3 class="mb-0 fw-bold">{{ analyses_terminees }}</h3></div>
+                            <div class="stat-icon" style="background-color: rgba(25,135,84,0.1); color: #198754;"><i class="fas fa-check-circle"></i></div>
                         </div>
                     </div>
                 </div>
@@ -101,7 +79,6 @@
                 <div class="card">
                     <div class="card-body p-4">
                         <h4 class="card-title mb-4 text-primary"><i class="fas fa-plus-circle me-2"></i>Nouvelle Analyse</h4>
-                        
                         <form id="analyseForm" action="/api/analyses/create" method="POST">
                             <div class="row g-3">
                                 <div class="col-md-6">
@@ -114,14 +91,13 @@
                                     </select>
                                     <div class="form-text text-muted">Pas de patient ? <a href="/patients" target="_blank">Créer un nouveau patient</a>.</div>
                                 </div>
-
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Type d'analyse</label>
-                                    <!-- LISTE DES TYPES CORRIGÉE (SANS RADIO) -->
+                                    <!-- TYPES CORRIGÉS -->
                                     <select name="type_analyse" id="type_analyse" class="form-select" required>
                                         <option value="" selected disabled>Choisir le type...</option>
-                                        <option value="Hématologie">Hématologie (NFS, Coagulation...)</option>
                                         <option value="Biochimie">Biochimie (Glycémie, Lipides...)</option>
+                                        <option value="Hématologie">Hématologie (NFS, Coagulation...)</option>
                                         <option value="Immunologie">Immunologie / Sérologie</option>
                                         <option value="Urines">Analyse d'Urines (ECBU...)</option>
                                         <option value="Bactériologie">Bactériologie (Prélèvements...)</option>
@@ -129,7 +105,6 @@
                                     </select>
                                 </div>
                             </div>
-
                             <div class="mt-4">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <h6 class="mb-0 text-secondary fw-bold"><i class="fas fa-flask me-2"></i>Résultats Détaillés (Optionnel)</h6>
@@ -139,7 +114,6 @@
                                 </div>
                                 <div id="resultsContainer"></div>
                             </div>
-
                             <div class="col-12 mt-4">
                                 <button type="submit" class="btn btn-primary w-100 py-2 fw-bold"><i class="fas fa-save me-2"></i>Créer l'analyse</button>
                             </div>
@@ -149,34 +123,21 @@
             </div>
         </div>
 
-        <!-- HISTORIQUE DES ANALYSES AVEC RECHERCHE -->
+        <!-- HISTORIQUE AVEC RECHERCHE -->
         <div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <h5 class="mb-0"><i class="fas fa-list-alt me-2 text-muted"></i>Historique des Analyses</h5>
-                        
-                        <!-- BARRE DE RECHERCHE -->
                         <div class="input-group" style="max-width: 350px;">
                             <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
                             <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Rechercher (Patient, Type, Statut)...">
-                            <button class="btn btn-outline-secondary border-start-0" type="button" onclick="clearSearch()">
-                                <i class="fas fa-times"></i>
-                            </button>
+                            <button class="btn btn-outline-secondary border-start-0" type="button" onclick="clearSearch()"><i class="fas fa-times"></i></button>
                         </div>
                     </div>
-                    
                     <div class="card-body p-0">
                         <table class="table table-hover align-middle mb-0" id="analysesTable">
-                            <thead class="bg-light">
-                                <tr>
-                                    <th class="ps-4">Patient</th>
-                                    <th>Type</th>
-                                    <th>Date</th>
-                                    <th>Statut</th>
-                                    <th class="text-end pe-4">Actions</th>
-                                </tr>
-                            </thead>
+                            <thead class="bg-light"><tr><th class="ps-4">Patient</th><th>Type</th><th>Date</th><th>Statut</th><th class="text-end pe-4">Actions</th></tr></thead>
                             <tbody>
                                 {% if analyses %}
                                     {% for analyse in analyses %}
@@ -184,36 +145,24 @@
                                         <td class="ps-4 fw-semibold patient-name">{{ analyse.patient.nom }} {{ analyse.patient.prenom }}</td>
                                         <td><span class="badge bg-light text-dark border analysis-type">{{ analyse.type_analyse }}</span></td>
                                         <td class="text-muted small">{{ analyse.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
-                                        <td>
-                                            {% if analyse.statut == 'Terminé' %}
-                                                <span class="badge badge-status bg-termine analysis-status">Terminé</span>
-                                            {% else %}
-                                                <span class="badge badge-status bg-en-cours analysis-status">En cours</span>
-                                            {% endif %}
-                                        </td>
+                                        <td>{% if analyse.statut == 'Terminé' %}<span class="badge badge-status bg-termine analysis-status">Terminé</span>{% else %}<span class="badge badge-status bg-en-cours analysis-status">En cours</span>{% endif %}</td>
                                         <td class="text-end pe-4">
-                                            <a href="/analyse/{{ analyse.id }}" class="btn btn-sm btn-outline-primary rounded-pill me-1">
-                                                <i class="fas fa-eye me-1"></i> Voir
-                                            </a>
-                                            <form action="/api/analyses/{{ analyse.id }}/delete" method="POST" class="d-inline" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette analyse ?');">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
+                                            <a href="/analyse/{{ analyse.id }}" class="btn btn-sm btn-outline-primary rounded-pill me-1"><i class="fas fa-eye me-1"></i> Voir</a>
+                                            <form action="/api/analyses/{{ analyse.id }}/delete" method="POST" class="d-inline" onsubmit="return confirm('Supprimer cette analyse ?');">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill"><i class="fas fa-trash"></i></button>
                                             </form>
                                         </td>
                                     </tr>
                                     {% endfor %}
                                 {% else %}
-                                    <tr><td colspan="5" class="text-center py-5 text-muted"><i class="fas fa-inbox fa-3x mb-3 d-block text-secondary opacity-50"></i>Aucune analyse pour l'instant.</td></tr>
+                                    <tr><td colspan="5" class="text-center py-5 text-muted">Aucune analyse.</td></tr>
                                 {% endif %}
                             </tbody>
                         </table>
-                        
-                        <!-- MESSAGE SI AUCUN RÉSULTAT TROUVÉ -->
                         <div id="noResults" class="text-center py-5" style="display: none;">
                             <i class="fas fa-search fa-3x mb-3 d-block text-secondary opacity-50"></i>
-                            <p class="text-muted">Aucune analyse ne correspond à votre recherche.</p>
-                            <button class="btn btn-sm btn-outline-secondary mt-2" onclick="clearSearch()">Effacer la recherche</button>
+                            <p class="text-muted">Aucun résultat trouvé.</p>
+                            <button class="btn btn-sm btn-outline-secondary mt-2" onclick="clearSearch()">Effacer</button>
                         </div>
                     </div>
                 </div>
@@ -221,156 +170,80 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js?v=2"></script>
-    
-    <!-- SCRIPT POUR LES RÉSULTATS DYNAMIQUES -->
-   <script>
-    let resultCount = 0;
-    
-    // Configuration des types pour adapter le formulaire
-    const analysisTypes = {
-        'Biochimie': { numeric: true },
-        'Hématologie': { numeric: true },
-        'Immunologie': { numeric: true },
-        'Endocrinologie': { numeric: true },
-        'Urines': { numeric: true },
-        'Bactériologie': { numeric: false }, // Texte libre
-        'Anatomopathologie': { numeric: false } // Texte libre
-    };
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let resultCount = 0;
+        const analysisTypes = {
+            'Biochimie': { numeric: true }, 'Hématologie': { numeric: true },
+            'Immunologie': { numeric: true }, 'Endocrinologie': { numeric: true },
+            'Urines': { numeric: true }, 'Bactériologie': { numeric: false }
+        };
 
-    function addResultRow() {
-        resultCount++;
-        const container = document.getElementById('resultsContainer');
-        const row = document.createElement('div');
-        row.className = 'result-row row g-2';
-        
-        // Déterminer le type d'analyse sélectionné actuellement pour pré-configurer la ligne
-        const currentTypeSelect = document.getElementById('type_analyse');
-        const selectedType = currentTypeSelect.value;
-        const isNumeric = analysisTypes[selectedType]?.numeric ?? true; // Par défaut numérique si inconnu
+        function addResultRow() {
+            resultCount++;
+            const container = document.getElementById('resultsContainer');
+            const row = document.createElement('div');
+            row.className = 'result-row row g-2';
+            const selectedType = document.getElementById('type_analyse').value;
+            const isNumeric = analysisTypes[selectedType]?.numeric ?? true;
 
-        // Construction HTML conditionnelle
-        let inputsHTML = '';
-        
-        if (isNumeric) {
-            // Mode NUMÉRIQUE (Biochimie, Hématologie...)
-            inputsHTML = `
-                <div class="col-md-3">
-                    <input type="text" name="test_name_${resultCount}" class="form-control form-control-sm" placeholder="Nom du test (ex: Glycémie)" required>
-                </div>
-                <div class="col-md-2">
-                    <input type="number" step="0.01" name="test_value_${resultCount}" class="form-control form-control-sm" placeholder="Valeur" required>
-                </div>
-                <div class="col-md-2">
-                    <input type="text" name="test_unit_${resultCount}" class="form-control form-control-sm" placeholder="Unité (g/L)">
-                </div>
-                <div class="col-md-2">
-                    <input type="number" step="0.01" name="test_min_${resultCount}" class="form-control form-control-sm" placeholder="Min">
-                </div>
-                <div class="col-md-2">
-                    <input type="number" step="0.01" name="test_max_${resultCount}" class="form-control form-control-sm" placeholder="Max">
-                </div>
-                <div class="col-md-1 d-flex align-items-center">
-                    <span class="btn-remove btn-sm" onclick="this.closest('.result-row').remove()"><i class="fas fa-trash"></i></span>
-                </div>
-            `;
-        } else {
-            // Mode TEXTE LIBRE (Bactériologie, Commentaires...)
-            inputsHTML = `
-                <div class="col-md-5">
-                    <input type="text" name="test_name_${resultCount}" class="form-control form-control-sm" placeholder="Nom / Bactérie (ex: E.Coli)" required>
-                </div>
-                <div class="col-md-6">
-                    <textarea name="test_value_${resultCount}" class="form-control form-control-sm" rows="1" placeholder="Résultat / Observation (ex: Sensible aux pénicillines)" required></textarea>
-                </div>
-                <div class="col-md-1 d-flex align-items-center">
-                    <span class="btn-remove btn-sm" onclick="this.closest('.result-row').remove()"><i class="fas fa-trash"></i></span>
-                </div>
-            `;
-        }
-
-        row.innerHTML = inputsHTML;
-        container.appendChild(row);
-    }
-
-    // Écouter le changement de type d'analyse pour mettre à jour les lignes futures
-    document.getElementById('type_analyse').addEventListener('change', function() {
-        // Optionnel : On pourrait vider les résultats actuels ou afficher un message
-        // Pour l'instant, cela affectera juste les NOUVELLES lignes ajoutées
-        console.log("Type changé vers :", this.value);
-    });
-
-    document.getElementById('analyseForm').addEventListener('submit', function(e) {
-        let names = [], values = [], units = [], mins = [], maxs = [];
-        
-        for(let i=1; i<=resultCount; i++) {
-            const nameInput = document.querySelector(`input[name="test_name_${i}"]`);
-            if(nameInput && nameInput.value) {
-                names.push(nameInput.value);
-                // La valeur peut venir d'un input ou d'un textarea
-                const valInput = document.querySelector(`input[name="test_value_${i}"]`) || document.querySelector(`textarea[name="test_value_${i}"]`);
-                values.push(valInput ? valInput.value : '');
-                
-                units.push(document.querySelector(`input[name="test_unit_${i}"]`)?.value || '');
-                mins.push(document.querySelector(`input[name="test_min_${i}"]`)?.value || '');
-                maxs.push(document.querySelector(`input[name="test_max_${i}"]`)?.value || '');
-            }
-        }
-
-        if(names.length > 0) {
-            const fields = [
-                {name: 'result_names', val: names.join('||')},
-                {name: 'result_values', val: values.join('||')},
-                {name: 'result_units', val: units.join('||')},
-                {name: 'result_mins', val: mins.join('||')},
-                {name: 'result_maxs', val: maxs.join('||')}
-            ];
-            fields.forEach(f => {
-                const input = document.createElement('input');
-                input.type = 'hidden'; input.name = f.name; input.value = f.val;
-                this.appendChild(input);
-            });
-        }
-    });
-
-    // ... (Gardez le script de recherche ci-dessous inchangé) ...
-    const searchInput = document.getElementById('searchInput');
-    const table = document.getElementById('analysesTable');
-    const rows = table ? table.querySelectorAll('.analysis-row') : [];
-    const noResults = document.getElementById('noResults');
-
-    if(searchInput && table && noResults) {
-        searchInput.addEventListener('keyup', function() {
-            const term = this.value.toLowerCase();
-            let visibleCount = 0;
-            rows.forEach(row => {
-                const patient = row.querySelector('.patient-name')?.textContent.toLowerCase() || '';
-                const type = row.querySelector('.analysis-type')?.textContent.toLowerCase() || '';
-                const status = row.querySelector('.analysis-status')?.textContent.toLowerCase() || '';
-                if (patient.includes(term) || type.includes(term) || status.includes(term)) {
-                    row.style.display = '';
-                    visibleCount++;
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-            if (visibleCount === 0 && term.length > 0) {
-                table.style.display = 'none';
-                noResults.style.display = 'block';
+            if (isNumeric) {
+                row.innerHTML = `
+                    <div class="col-md-3"><input type="text" name="test_name_${resultCount}" class="form-control form-control-sm" placeholder="Nom (ex: Glycémie)" required></div>
+                    <div class="col-md-2"><input type="number" step="0.01" name="test_value_${resultCount}" class="form-control form-control-sm" placeholder="Valeur" required></div>
+                    <div class="col-md-2"><input type="text" name="test_unit_${resultCount}" class="form-control form-control-sm" placeholder="Unité"></div>
+                    <div class="col-md-2"><input type="number" step="0.01" name="test_min_${resultCount}" class="form-control form-control-sm" placeholder="Min"></div>
+                    <div class="col-md-2"><input type="number" step="0.01" name="test_max_${resultCount}" class="form-control form-control-sm" placeholder="Max"></div>
+                    <div class="col-md-1 d-flex align-items-center"><span class="btn-remove btn-sm" onclick="this.closest('.result-row').remove()"><i class="fas fa-trash"></i></span></div>
+                `;
             } else {
-                table.style.display = 'table';
-                noResults.style.display = 'none';
+                row.innerHTML = `
+                    <div class="col-md-5"><input type="text" name="test_name_${resultCount}" class="form-control form-control-sm" placeholder="Nom/Bactérie" required></div>
+                    <div class="col-md-6"><textarea name="test_value_${resultCount}" class="form-control form-control-sm" rows="1" placeholder="Observation/Résultat" required></textarea></div>
+                    <div class="col-md-1 d-flex align-items-center"><span class="btn-remove btn-sm" onclick="this.closest('.result-row').remove()"><i class="fas fa-trash"></i></span></div>
+                `;
+            }
+            container.appendChild(row);
+        }
+
+        document.getElementById('analyseForm').addEventListener('submit', function(e) {
+            let names=[], values=[], units=[], mins=[], maxs=[];
+            for(let i=1; i<=resultCount; i++) {
+                const n = document.querySelector(`input[name="test_name_${i}"]`);
+                if(n && n.value) {
+                    names.push(n.value);
+                    const v = document.querySelector(`input[name="test_value_${i}"]`) || document.querySelector(`textarea[name="test_value_${i}"]`);
+                    values.push(v ? v.value : '');
+                    units.push(document.querySelector(`input[name="test_unit_${i}"]`)?.value || '');
+                    mins.push(document.querySelector(`input[name="test_min_${i}"]`)?.value || '');
+                    maxs.push(document.querySelector(`input[name="test_max_${i}"]`)?.value || '');
+                }
+            }
+            if(names.length > 0) {
+                [['result_names', names], ['result_values', values], ['result_units', units], ['result_mins', mins], ['result_maxs', maxs]].forEach(([name, arr]) => {
+                    const inp = document.createElement('input'); inp.type='hidden'; inp.name=name; inp.value=arr.join('||'); this.appendChild(inp);
+                });
             }
         });
-    }
 
-    function clearSearch() {
-        if(searchInput) {
-            searchInput.value = '';
-            searchInput.dispatchEvent(new Event('keyup'));
-            searchInput.focus();
-        }
-    }
-</script>
+        // Recherche
+        const searchInput = document.getElementById('searchInput');
+        const table = document.getElementById('analysesTable');
+        const rows = table.querySelectorAll('.analysis-row');
+        const noResults = document.getElementById('noResults');
+        searchInput.addEventListener('keyup', function() {
+            const term = this.value.toLowerCase();
+            let visible = 0;
+            rows.forEach(r => {
+                const p = r.querySelector('.patient-name').textContent.toLowerCase();
+                const t = r.querySelector('.analysis-type').textContent.toLowerCase();
+                const s = r.querySelector('.analysis-status').textContent.toLowerCase();
+                if(p.includes(term) || t.includes(term) || s.includes(term)) { r.style.display=''; visible++; } else { r.style.display='none'; }
+            });
+            if(visible===0 && term.length>0) { table.style.display='none'; noResults.style.display='block'; }
+            else { table.style.display='table'; noResults.style.display='none'; }
+        });
+        function clearSearch() { searchInput.value=''; searchInput.dispatchEvent(new Event('keyup')); searchInput.focus(); }
+    </script>
 </body>
 </html>
