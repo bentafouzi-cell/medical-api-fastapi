@@ -193,3 +193,25 @@ def delete_resultat(
     db.commit()
 
     return {"message": "Résultat supprimé"}
+    @router.post("/{analyse_id}/delete")
+def delete_analyse(
+    analyse_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.UserDB = Depends(get_current_user)
+):
+    analyse = db.query(models.AnalyseDB).filter(
+        models.AnalyseDB.id == analyse_id,
+        models.AnalyseDB.labo_id == current_user.labo_id
+    ).first()
+
+    if not analyse:
+        raise HTTPException(status_code=404, detail="Analyse non trouvée")
+
+    # Supprimer d'abord tous les résultats liés (cascade)
+    db.query(models.Resultat).filter(models.Resultat.analyse_id == analyse_id).delete()
+    
+    # Puis supprimer l'analyse
+    db.delete(analyse)
+    db.commit()
+
+    return RedirectResponse(url="/", status_code=303)
