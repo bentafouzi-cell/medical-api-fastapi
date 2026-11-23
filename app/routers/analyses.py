@@ -103,3 +103,23 @@ def get_analyse_detail(
             } for r in resultats
         ]
     }
+
+
+@router.post("/valider/{analyse_id}")
+def valider_analyse(
+    analyse_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.UserDB = Depends(get_current_user)
+):
+    analyse = db.query(models.AnalyseDB).filter(
+        models.AnalyseDB.id == analyse_id,
+        models.AnalyseDB.labo_id == current_user.labo_id
+    ).first()
+
+    if not analyse:
+        raise HTTPException(status_code=404, detail="Analyse non trouvée")
+
+    analyse.statut = "Terminé"
+    db.commit()
+
+    return RedirectResponse(url=f"/analyse/{analyse_id}", status_code=303)
