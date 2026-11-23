@@ -62,10 +62,20 @@ def patients_page(request: Request, current_user: models.UserDB = Depends(get_cu
 def read_root(request: Request, db: Session = Depends(get_db), current_user: models.UserDB = Depends(get_current_user)):
     patients_list = db.query(models.Patient).filter(models.Patient.labo_id == current_user.labo_id).all()
     analyses_list = db.query(models.AnalyseDB).filter(models.AnalyseDB.labo_id == current_user.labo_id).order_by(models.AnalyseDB.created_at.desc()).all()
+
+    total_patients = db.query(models.Patient).filter(models.Patient.labo_id == current_user.labo_id).count()
+    total_analyses = db.query(models.AnalyseDB).filter(models.AnalyseDB.labo_id == current_user.labo_id).count()
+    analyses_en_cours = db.query(models.AnalyseDB).filter(models.AnalyseDB.labo_id == current_user.labo_id, models.AnalyseDB.statut == "En cours").count()
+    analyses_terminees = db.query(models.AnalyseDB).filter(models.AnalyseDB.labo_id == current_user.labo_id, models.AnalyseDB.statut == "Terminé").count()
+
     return templates.TemplateResponse("index.html", {
         "request": request,
         "patients": patients_list,
-        "analyses": analyses_list
+        "analyses": analyses_list,
+        "total_patients": total_patients,
+        "total_analyses": total_analyses,
+        "analyses_en_cours": analyses_en_cours,
+        "analyses_terminees": analyses_terminees
     })
 
 
