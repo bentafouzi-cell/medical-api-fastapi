@@ -239,3 +239,40 @@ def add_result_to_analyse(
 
     # Redirection vers la page de détail pour voir le résultat ajouté
     return RedirectResponse(url=f"/analyse/{analyse_id}", status_code=303)
+
+@router.get("/toutes")
+def lister_analyses(db: Session = Depends(get_db), current_user: models.UserDB = Depends(get_current_user)):
+    analyses = db.query(models.AnalyseDB).filter(
+        models.AnalyseDB.labo_id == current_user.labo_id
+    ).order_by(models.AnalyseDB.created_at.desc()).all()
+    
+    result = []
+    for a in analyses:
+        result.append({
+            "id": a.id,
+            "patient_nom": f"{a.patient.nom} {a.patient.prenom}",
+            "type_analyse": a.type_analyse,
+            "statut": a.statut,
+            "date": a.created_at.strftime("%d/%m/%Y %H:%M")
+        })
+    return result
+
+@router.get("/stats")
+def get_stats(db: Session = Depends(get_db), current_user: models.UserDB = Depends(get_current_user)):
+    total_patients = db.query(models.Patient).filter(models.Patient.labo_id == current_user.labo_id).count()
+    total_analyses = db.query(models.AnalyseDB).filter(models.AnalyseDB.labo_id == current_user.labo_id).count()
+    en_cours = db.query(models.AnalyseDB).filter(
+        models.AnalyseDB.labo_id == current_user.labo_id,
+        models.AnalyseDB.statut == "En cours"
+    ).count()
+    terminees = db.query(models.AnalyseDB).filter(
+        models.AnalyseDB.labo_id == current_user.labo_id,
+        models.AnalyseDB.statut == "Terminé"
+    ).count()
+    
+    return {
+        "total_patients": total_patients,
+        "total_analyses": total_analyses,
+        "en_cours": en_cours,
+        "terminees": terminees
+    }
