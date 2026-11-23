@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+            @frame footer_frame {
+                -pdf-frame-content: footer_content;
+                bottom: 1cm;
+                margin-left: 2cm;
+                margin-right: 2cm;
+                height: 1cm;
+            }
+        }
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #333; }
+        .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #0d6efd; padding-bottom: 10px; }
+        .header h1 { color: #0d6efd; margin: 0; font-size: 22px; }
+        .header p { margin: 2px 0; color: #666; }
+        .info-section { margin-bottom: 20px; width: 100%; }
+        .info-section td { padding: 3px; }
+        .label { font-weight: bold; }
+        table.results { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        table.results th { background-color: #f1f5f9; border: 1px solid #ccc; padding: 8px; text-align: center; font-size: 11px; }
+        table.results td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        .normal { color: #198754; font-weight: bold; }
+        .abnormal { color: #dc3545; font-weight: bold; }
+        #footer_content { text-align: center; font-size: 9px; color: #888; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MedicLab</h1>
+        <p>Rapport d'Analyse Médicale</p>
+    </div>
+
+    <table class="info-section">
+        <tr>
+            <td class="label">Patient :</td>
+            <td>{{ analyse.patient.nom }} {{ analyse.patient.prenom }}</td>
+            <td class="label">Date :</td>
+            <td>{{ analyse.created_at.strftime('%d/%m/%Y à %H:%M') }}</td>
+        </tr>
+        <tr>
+            <td class="label">Type d'analyse :</td>
+            <td>{{ analyse.type_analyse }}</td>
+            <td class="label">Statut :</td>
+            <td>{{ analyse.statut }}</td>
+        </tr>
+    </table>
+
+    <table class="results">
+        <thead>
+            <tr>
+                <th>Test</th>
+                <th>Résultat</th>
+                <th>Unité</th>
+                <th>Valeurs de Référence</th>
+                <th>Statut</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for res in analyse.resultats %}
+            <tr>
+                <td style="text-align: left;">{{ res.nom_test }}</td>
+                <td>
+                    {% set val = res.valeur|float %}
+                    {% set min = res.norme_min|float if res.norme_min else None %}
+                    {% set max = res.norme_max|float if res.norme_max else None %}
+                    
+                    {% if min is not none and max is not none %}
+                        {% if val < min or val > max %}
+                            <span class="abnormal">{{ res.valeur }}</span>
+                        {% else %}
+                            <span class="normal">{{ res.valeur }}</span>
+                        {% endif %}
+                    {% else %}
+                        {{ res.valeur }}
+                    {% endif %}
+                </td>
+                <td>{{ res.unite }}</td>
+                <td>
+                    {% if res.norme_min and res.norme_max %}
+                        {{ res.norme_min }} - {{ res.norme_max }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    {% if min is not none and max is not none %}
+                        {% if val < min or val > max %}
+                            <span class="abnormal">Hors norme</span>
+                        {% else %}
+                            <span class="normal">Normal</span>
+                        {% endif %}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div id="footer_content">
+        Document généré automatiquement par MedicLab SaaS - Analyse ID #{{ analyse.id }}
+    </div>
+</body>
+</html>

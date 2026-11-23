@@ -1,6 +1,8 @@
 from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, StreamingResponse
+from xhtml2pdf import pisa
+from io import BytesIO
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from sqlalchemy.orm import Session
 from .database import engine, Base, get_db
@@ -60,6 +62,31 @@ def analyse_detail_page(analyse_id: int, request: Request, db: Session = Depends
         raise HTTPException(status_code=404, detail="Analyse non trouvée")
     return templates.TemplateResponse("detail.html", {"request": request, "analyse": analyse})
 
+@app.get("/analyse/{analyse_id}/pdf")
+def generate_analyse_pdf(analyse_id: int, db: Session = Depends(get_db), current_user: models.UserDB = Depends(get_current_user)):
+    analyse = db.query(models.AnalyseDB).filter(
+        models.AnalyseDB.id == analyse_id,
+        models.AnalyseDB.labo_id == current_user.labo_id
+    ).first()
+    
+    if not analyse:
+        raise HTTPException(status_code=404, detail="Analyse non trouvée")
+    
+    html = templates.env.get_template("rapport_pdf.html").render(analyse=analyse)
+    
+    buffer = BytesIO()
+    pisa_status = pisa.CreatePDF(html, dest=buffer)
+    
+    if pisa_status.err:
+        raise HTTPException(status_code=500, detail="Erreur lors de la génération du PDF")
+    
+    buffer.seek(0)
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=Rapport_MedicLab_{analyse.id}.pdf"}
+    )
+    
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     if exc.status_code == 401:

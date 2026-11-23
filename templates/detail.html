@@ -14,8 +14,6 @@
         .badge-status { padding: 5px 10px; border-radius: 20px; font-size: 0.85em; }
         .bg-en-cours { background-color: #fff3cd; color: #856404; }
         .bg-termine { background-color: #d1e7dd; color: #0f5132; }
-        
-        /* CSS MAGIQUE POUR L'IMPRESSION PDF */
         @media print {
             .navbar, .no-print { display: none !important; }
             body { background-color: white; }
@@ -29,10 +27,13 @@
         <div class="container">
             <a class="navbar-brand fw-bold text-primary" href="/"><i class="fas fa-heartbeat me-2"></i>MedicLab</a>
             <div class="ms-auto">
-                <button onclick="window.print()" class="btn btn-success btn-sm rounded-pill px-3 no-print me-2">
-                    <i class="fas fa-print me-1"></i> Imprimer / PDF
+                <a href="/analyse/{{ analyse.id }}/pdf" class="btn btn-success btn-sm rounded-pill px-3 me-2">
+                    <i class="fas fa-file-pdf me-1"></i> Télécharger PDF
+                </a>
+                <button onclick="window.print()" class="btn btn-outline-primary btn-sm rounded-pill px-3 me-2">
+                    <i class="fas fa-print me-1"></i> Imprimer
                 </button>
-                <a href="/" class="btn btn-outline-secondary btn-sm rounded-pill px-3 no-print">
+                <a href="/" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
                     <i class="fas fa-arrow-left me-1"></i> Retour
                 </a>
             </div>
@@ -64,7 +65,7 @@
                 </div>
                 <hr>
                 <h5 class="text-secondary mb-3"><i class="fas fa-flask me-2"></i>Résultats Biologiques</h5>
-                
+
                 {% if analyse.resultats %}
                 <table class="table table-bordered table-hover align-middle">
                     <thead class="table-light">
@@ -78,13 +79,12 @@
                     </thead>
                     <tbody>
                         {% for res in analyse.resultats %}
+                        {% set val = res.valeur|float %}
+                        {% set min = res.norme_min|float if res.norme_min else None %}
+                        {% set max = res.norme_max|float if res.norme_max else None %}
                         <tr>
                             <td class="fw-semibold">{{ res.nom_test }}</td>
                             <td class="text-center fs-5">
-                                {% set val = res.valeur|float %}
-                                {% set min = res.norme_min|float if res.norme_min else None %}
-                                {% set max = res.norme_max|float if res.norme_max else None %}
-                                
                                 {% if min is not none and max is not none %}
                                     {% if val < min or val > max %}
                                         <span class="result-abnormal">{{ res.valeur }}</span>
