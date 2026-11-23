@@ -84,10 +84,15 @@ async def forgot_password(email: str, db: Session = Depends(get_db)):
     
     token = secrets.token_urlsafe(32)
     expires_at = datetime.utcnow() + timedelta(minutes=15)
-    
-    reset_token = models.PasswordResetToken(token=token, user_id=user.id, expires_at=expires_at)
-    db.add(reset_token)
-    db.commit()
+
+    try:
+        reset_token = models.PasswordResetToken(token=token, user_id=user.id, expires_at=expires_at)
+        db.add(reset_token)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        print(f"❌ [ROUTE] Échec de l'enregistrement du jeton : {e}")
+        raise HTTPException(status_code=500, detail="Impossible de créer le lien de réinitialisation.")
     
     print("🚀 [ROUTE] Appel de envoyer_email_reinitialisation MAINTENANT...")
     

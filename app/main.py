@@ -11,9 +11,13 @@ from io import BytesIO
 from .database import engine, Base, get_db, SessionLocal
 from .routers import analyses, auth, patients, admin
 from .auth import get_current_user, get_password_hash, COOKIE_SECURE
+from .schema_repair import reparer_schema
 from . import models
 
 Base.metadata.create_all(bind=engine)
+# create_all ne modifie pas les tables existantes : on complete les colonnes
+# ajoutees au modele apres la creation de la table.
+reparer_schema()
 
 
 def verifier_configuration():
