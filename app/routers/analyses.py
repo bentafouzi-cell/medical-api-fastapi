@@ -163,7 +163,7 @@ def update_resultat(
     print(f"   Valeur après assignment: {resultat.valeur}")
 
     # FORCER LA PERSISTANCE - C'est la clé du fix !
-    db.session.add(resultat)
+    db.add(resultat)
     db.commit()
     
     print(f"   ✅ Commit réussi, valeur finale en DB: {resultat.valeur}")
