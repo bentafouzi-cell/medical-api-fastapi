@@ -224,80 +224,129 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js?v=2"></script>
     
     <!-- SCRIPT POUR LES RÉSULTATS DYNAMIQUES -->
-    <script>
-        let resultCount = 0;
+   <script>
+    let resultCount = 0;
+    
+    // Configuration des types pour adapter le formulaire
+    const analysisTypes = {
+        'Biochimie': { numeric: true },
+        'Hématologie': { numeric: true },
+        'Immunologie': { numeric: true },
+        'Endocrinologie': { numeric: true },
+        'Urines': { numeric: true },
+        'Bactériologie': { numeric: false }, // Texte libre
+        'Anatomopathologie': { numeric: false } // Texte libre
+    };
 
-        function addResultRow() {
-            resultCount++;
-            const container = document.getElementById('resultsContainer');
-            const row = document.createElement('div');
-            row.className = 'result-row row g-2';
-            row.innerHTML = `
+    function addResultRow() {
+        resultCount++;
+        const container = document.getElementById('resultsContainer');
+        const row = document.createElement('div');
+        row.className = 'result-row row g-2';
+        
+        // Déterminer le type d'analyse sélectionné actuellement pour pré-configurer la ligne
+        const currentTypeSelect = document.getElementById('type_analyse');
+        const selectedType = currentTypeSelect.value;
+        const isNumeric = analysisTypes[selectedType]?.numeric ?? true; // Par défaut numérique si inconnu
+
+        // Construction HTML conditionnelle
+        let inputsHTML = '';
+        
+        if (isNumeric) {
+            // Mode NUMÉRIQUE (Biochimie, Hématologie...)
+            inputsHTML = `
                 <div class="col-md-3">
                     <input type="text" name="test_name_${resultCount}" class="form-control form-control-sm" placeholder="Nom du test (ex: Glycémie)" required>
                 </div>
                 <div class="col-md-2">
-                    <input type="text" name="test_value_${resultCount}" class="form-control form-control-sm" placeholder="Valeur (ex: 0.90)" required>
+                    <input type="number" step="0.01" name="test_value_${resultCount}" class="form-control form-control-sm" placeholder="Valeur" required>
                 </div>
                 <div class="col-md-2">
-                    <input type="text" name="test_unit_${resultCount}" class="form-control form-control-sm" placeholder="Unité (ex: g/L)">
+                    <input type="text" name="test_unit_${resultCount}" class="form-control form-control-sm" placeholder="Unité (g/L)">
                 </div>
                 <div class="col-md-2">
-                    <input type="text" name="test_min_${resultCount}" class="form-control form-control-sm" placeholder="Min Norme">
+                    <input type="number" step="0.01" name="test_min_${resultCount}" class="form-control form-control-sm" placeholder="Min">
                 </div>
                 <div class="col-md-2">
-                    <input type="text" name="test_max_${resultCount}" class="form-control form-control-sm" placeholder="Max Norme">
+                    <input type="number" step="0.01" name="test_max_${resultCount}" class="form-control form-control-sm" placeholder="Max">
                 </div>
                 <div class="col-md-1 d-flex align-items-center">
                     <span class="btn-remove btn-sm" onclick="this.closest('.result-row').remove()"><i class="fas fa-trash"></i></span>
                 </div>
             `;
-            container.appendChild(row);
+        } else {
+            // Mode TEXTE LIBRE (Bactériologie, Commentaires...)
+            inputsHTML = `
+                <div class="col-md-5">
+                    <input type="text" name="test_name_${resultCount}" class="form-control form-control-sm" placeholder="Nom / Bactérie (ex: E.Coli)" required>
+                </div>
+                <div class="col-md-6">
+                    <textarea name="test_value_${resultCount}" class="form-control form-control-sm" rows="1" placeholder="Résultat / Observation (ex: Sensible aux pénicillines)" required></textarea>
+                </div>
+                <div class="col-md-1 d-flex align-items-center">
+                    <span class="btn-remove btn-sm" onclick="this.closest('.result-row').remove()"><i class="fas fa-trash"></i></span>
+                </div>
+            `;
         }
 
-        document.getElementById('analyseForm').addEventListener('submit', function(e) {
-            let names = [], values = [], units = [], mins = [], maxs = [];
-            for(let i=1; i<=resultCount; i++) {
-                const nameInput = document.querySelector(`input[name="test_name_${i}"]`);
-                if(nameInput && nameInput.value) {
-                    names.push(nameInput.value);
-                    values.push(document.querySelector(`input[name="test_value_${i}"]`).value || '');
-                    units.push(document.querySelector(`input[name="test_unit_${i}"]`).value || '');
-                    mins.push(document.querySelector(`input[name="test_min_${i}"]`).value || '');
-                    maxs.push(document.querySelector(`input[name="test_max_${i}"]`).value || '');
-                }
-            }
-            if(names.length > 0) {
-                const fields = [
-                    {name: 'result_names', val: names.join('||')},
-                    {name: 'result_values', val: values.join('||')},
-                    {name: 'result_units', val: units.join('||')},
-                    {name: 'result_mins', val: mins.join('||')},
-                    {name: 'result_maxs', val: maxs.join('||')}
-                ];
-                fields.forEach(f => {
-                    const input = document.createElement('input');
-                    input.type = 'hidden'; input.name = f.name; input.value = f.val;
-                    this.appendChild(input);
-                });
-            }
-        });
+        row.innerHTML = inputsHTML;
+        container.appendChild(row);
+    }
 
-        // SCRIPT DE RECHERCHE EN TEMPS RÉEL
-        const searchInput = document.getElementById('searchInput');
-        const table = document.getElementById('analysesTable');
-        const rows = table.querySelectorAll('.analysis-row');
-        const noResults = document.getElementById('noResults');
+    // Écouter le changement de type d'analyse pour mettre à jour les lignes futures
+    document.getElementById('type_analyse').addEventListener('change', function() {
+        // Optionnel : On pourrait vider les résultats actuels ou afficher un message
+        // Pour l'instant, cela affectera juste les NOUVELLES lignes ajoutées
+        console.log("Type changé vers :", this.value);
+    });
 
+    document.getElementById('analyseForm').addEventListener('submit', function(e) {
+        let names = [], values = [], units = [], mins = [], maxs = [];
+        
+        for(let i=1; i<=resultCount; i++) {
+            const nameInput = document.querySelector(`input[name="test_name_${i}"]`);
+            if(nameInput && nameInput.value) {
+                names.push(nameInput.value);
+                // La valeur peut venir d'un input ou d'un textarea
+                const valInput = document.querySelector(`input[name="test_value_${i}"]`) || document.querySelector(`textarea[name="test_value_${i}"]`);
+                values.push(valInput ? valInput.value : '');
+                
+                units.push(document.querySelector(`input[name="test_unit_${i}"]`)?.value || '');
+                mins.push(document.querySelector(`input[name="test_min_${i}"]`)?.value || '');
+                maxs.push(document.querySelector(`input[name="test_max_${i}"]`)?.value || '');
+            }
+        }
+
+        if(names.length > 0) {
+            const fields = [
+                {name: 'result_names', val: names.join('||')},
+                {name: 'result_values', val: values.join('||')},
+                {name: 'result_units', val: units.join('||')},
+                {name: 'result_mins', val: mins.join('||')},
+                {name: 'result_maxs', val: maxs.join('||')}
+            ];
+            fields.forEach(f => {
+                const input = document.createElement('input');
+                input.type = 'hidden'; input.name = f.name; input.value = f.val;
+                this.appendChild(input);
+            });
+        }
+    });
+
+    // ... (Gardez le script de recherche ci-dessous inchangé) ...
+    const searchInput = document.getElementById('searchInput');
+    const table = document.getElementById('analysesTable');
+    const rows = table ? table.querySelectorAll('.analysis-row') : [];
+    const noResults = document.getElementById('noResults');
+
+    if(searchInput && table && noResults) {
         searchInput.addEventListener('keyup', function() {
             const term = this.value.toLowerCase();
             let visibleCount = 0;
-
             rows.forEach(row => {
-                const patient = row.querySelector('.patient-name').textContent.toLowerCase();
-                const type = row.querySelector('.analysis-type').textContent.toLowerCase();
-                const status = row.querySelector('.analysis-status').textContent.toLowerCase();
-                
+                const patient = row.querySelector('.patient-name')?.textContent.toLowerCase() || '';
+                const type = row.querySelector('.analysis-type')?.textContent.toLowerCase() || '';
+                const status = row.querySelector('.analysis-status')?.textContent.toLowerCase() || '';
                 if (patient.includes(term) || type.includes(term) || status.includes(term)) {
                     row.style.display = '';
                     visibleCount++;
@@ -305,7 +354,6 @@
                     row.style.display = 'none';
                 }
             });
-
             if (visibleCount === 0 && term.length > 0) {
                 table.style.display = 'none';
                 noResults.style.display = 'block';
@@ -314,12 +362,15 @@
                 noResults.style.display = 'none';
             }
         });
+    }
 
-        function clearSearch() {
+    function clearSearch() {
+        if(searchInput) {
             searchInput.value = '';
             searchInput.dispatchEvent(new Event('keyup'));
             searchInput.focus();
         }
-    </script>
+    }
+</script>
 </body>
 </html>
