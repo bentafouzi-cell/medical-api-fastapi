@@ -11,7 +11,7 @@ def lister_labos(db: Session = Depends(get_db), current_user: models.UserDB = De
     if not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Accès réservé à l'administrateur")
     
-    labos = db.query(models.LaboDB).all()
+    labos = [l for l in db.query(models.LaboDB).all() if not l.est_technique]
     result = []
     for labo in labos:
         nb_users = db.query(models.UserDB).filter(models.UserDB.labo_id == labo.id).count()

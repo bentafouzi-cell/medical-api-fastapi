@@ -89,6 +89,32 @@ def creer_admin_par_defaut():
 
 creer_admin_par_defaut()
 
+
+def marquer_labos_techniques():
+    """Marque le laboratoire des comptes administrateurs comme interne.
+
+    Chaque utilisateur doit appartenir a un laboratoire : un compte admin a donc
+    le sien. Ce laboratoire n'est pas un client et ne doit pas apparaitre dans la
+    liste de supervision, ni proposer des boutons suspendre/supprimer qui
+    reviendraient a se verrouiller dehors.
+    """
+    db = SessionLocal()
+    try:
+        modifies = 0
+        admins = db.query(models.UserDB).filter(models.UserDB.is_admin == True).all()
+        for utilisateur in admins:
+            labo = utilisateur.labo
+            if labo is not None and not labo.est_technique:
+                labo.est_technique = True
+                modifies += 1
+        if modifies:
+            db.commit()
+            print(f"[admin] {modifies} laboratoire(s) marque(s) technique(s)")
+    finally:
+        db.close()
+
+marquer_labos_techniques()
+
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
