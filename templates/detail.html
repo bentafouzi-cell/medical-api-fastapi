@@ -1,261 +1,200 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Rapport - {{ analyse.patient.nom }} {{ analyse.patient.prenom }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
-        .navbar { background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .result-normal { color: #198754; font-weight: bold; }
-        .result-abnormal { color: #dc3545; font-weight: bold; }
-        .badge-status { padding: 5px 10px; border-radius: 20px; font-size: 0.85em; }
-        .bg-en-cours { background-color: #fff3cd; color: #856404; }
-        .bg-termine { background-color: #d1e7dd; color: #0f5132; }
-        .edit-row { background-color: #f8f9fa; }
-        @media print {
-            .navbar, .no-print { display: none !important; }
-            body { background-color: white; }
-            .card { box-shadow: none; border: none; margin: 0; padding: 0; }
-            .container { max-width: 100%; margin: 0; padding: 0; }
-        }
-    </style>
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-light mb-4 no-print">
-        <div class="container">
-            <a class="navbar-brand fw-bold text-primary" href="/"><i class="fas fa-heartbeat me-2"></i>MedicLab</a>
-            <div class="ms-auto">
-                {% if analyse.statut != 'Terminé' %}
-                <form action="/api/analyses/valider/{{ analyse.id }}" method="POST" class="d-inline">
-                    <button type="submit" class="btn btn-warning btn-sm rounded-pill px-3 me-2">
-                        <i class="fas fa-check-circle me-1"></i> Valider l'analyse
-                    </button>
-                </form>
-                {% endif %}
-                
-                <a href="/analyse/{{ analyse.id }}/pdf" class="btn btn-success btn-sm rounded-pill px-3 me-2">
-                    <i class="fas fa-file-pdf me-1"></i> Télécharger PDF
-                </a>
-                <button onclick="window.print()" class="btn btn-outline-primary btn-sm rounded-pill px-3 me-2">
-                    <i class="fas fa-print me-1"></i> Imprimer
-                </button>
-                <a href="/" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-                    <i class="fas fa-arrow-left me-1"></i> Retour
-                </a>
-            </div>
+{% extends "base.html" %}
+{% block title %}Analyse #{{ analyse.id }} - {{ analyse.patient.nom }}{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6" x-data="{ addResultOpen: false }">
+    
+    <!-- Header Actions -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 no-print">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">Rapport d'Analyse</h1>
+            <p class="text-sm text-slate-500 mt-1">ID #{{ analyse.id }} • {{ analyse.created_at.strftime('%d/%m/%Y à %H:%M') }}</p>
         </div>
-    </nav>
-
-    <div class="container">
-        <div class="card mb-4">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <h4 class="mb-0 text-primary">
-                    <i class="fas fa-file-medical me-2"></i>Rapport d'Analyse
-                </h4>
-                {% if analyse.statut == 'Terminé' %}
-                    <span class="badge badge-status bg-termine">Terminé</span>
-                {% else %}
-                    <span class="badge badge-status bg-en-cours">En cours</span>
-                {% endif %}
-            </div>
-            <div class="card-body">
-                <!-- Infos Patient -->
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <p class="mb-1"><strong>Patient :</strong> {{ analyse.patient.nom }} {{ analyse.patient.prenom }}</p>
-                        <p class="mb-1"><strong>Type :</strong> {{ analyse.type_analyse }}</p>
-                    </div>
-                    <div class="col-md-6 text-md-end">
-                        <p class="mb-1"><strong>Date :</strong> {{ analyse.created_at.strftime('%d/%m/%Y à %H:%M') }}</p>
-                        <p class="mb-1 text-muted small">ID Analyse : #{{ analyse.id }}</p>
-                    </div>
-                </div>
-                <hr>
-                
-                <!-- En-tête Résultats + Bouton Ajouter -->
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="text-secondary mb-0"><i class="fas fa-flask me-2"></i>Résultats Biologiques</h5>
-                    <button class="btn btn-sm btn-success rounded-pill no-print" data-bs-toggle="collapse" href="#addResultForm" role="button" aria-expanded="false" aria-controls="addResultForm">
-                        <i class="fas fa-plus me-1"></i> Ajouter un Résultat
-                    </button>
-                </div>
-
-                <!-- Formulaire d'Ajout (Caché par défaut) -->
-                <div class="collapse mb-4 no-print" id="addResultForm">
-                    <div class="card card-body bg-light border-0">
-                        <form action="/api/analyses/analyse/{{ analyse.id }}/add-result" method="POST" class="row g-2 align-items-end">
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold">Nom du test</label>
-                                <input type="text" name="nom_test" class="form-control form-control-sm" placeholder="ex: Glycémie" required>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label small fw-bold">Valeur</label>
-                                <input type="text" name="valeur" class="form-control form-control-sm" placeholder="ex: 0.90" required>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label small fw-bold">Unité</label>
-                                <input type="text" name="unite" class="form-control form-control-sm" placeholder="ex: g/L">
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label small fw-bold">Min Norme</label>
-                                <input type="text" name="norme_min" class="form-control form-control-sm" placeholder="Min">
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label small fw-bold">Max Norme</label>
-                                <input type="text" name="norme_max" class="form-control form-control-sm" placeholder="Max">
-                            </div>
-                            <div class="col-12 text-end mt-2">
-                                <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-save me-1"></i> Enregistrer</button>
-                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="collapse">Annuler</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Tableau des Résultats -->
-                {% if analyse.resultats %}
-                <table class="table table-bordered table-hover align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Test</th>
-                            <th class="text-center">Résultat</th>
-                            <th class="text-center">Unité</th>
-                            <th class="text-center">Norme Min</th>
-                            <th class="text-center">Norme Max</th>
-                            <th class="text-center">Statut</th>
-                            <th class="text-center no-print">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for res in analyse.resultats %}
-                        {% set val = res.valeur|float %}
-                        {% set min = res.norme_min|float if res.norme_min else None %}
-                        {% set max = res.norme_max|float if res.norme_max else None %}
-                        
-                        <!-- Ligne Vue -->
-                        <tr id="view-{{ res.id }}">
-                            <td class="fw-semibold">{{ res.nom_test }}</td>
-                            <td class="text-center fs-5">
-                                {% if min is not none and max is not none %}
-                                    {% if val < min or val > max %}
-                                        <span class="result-abnormal">{{ res.valeur }}</span>
-                                    {% else %}
-                                        <span class="result-normal">{{ res.valeur }}</span>
-                                    {% endif %}
-                                {% else %}
-                                    {{ res.valeur }}
-                                {% endif %}
-                            </td>
-                            <td class="text-center text-muted">{{ res.unite }}</td>
-                            <td class="text-center">{{ res.norme_min or '-' }}</td>
-                            <td class="text-center">{{ res.norme_max or '-' }}</td>
-                            <td class="text-center">
-                                {% if min is not none and max is not none %}
-                                    {% if val < min or val > max %}
-                                        <i class="fas fa-exclamation-triangle text-danger"></i> <span class="text-danger small">Hors norme</span>
-                                    {% else %}
-                                        <i class="fas fa-check-circle text-success"></i> <span class="text-success small">Normal</span>
-                                    {% endif %}
-                                {% else %}
-                                    <span class="text-muted small">-</span>
-                                {% endif %}
-                            </td>
-                            <td class="text-center no-print">
-                                <button class="btn btn-sm btn-outline-primary rounded-pill me-1" onclick="editRow({{ res.id }})" title="Modifier">
-                                    <i class="fas fa-pen"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger rounded-pill" onclick="deleteResult({{ res.id }})" title="Supprimer">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-
-                        <!-- Ligne Édition (Cachée) -->
-                        <tr id="edit-{{ res.id }}" class="edit-row" style="display: none;">
-                            <td><input type="text" id="edit-nom-{{ res.id }}" class="form-control form-control-sm" value="{{ res.nom_test }}"></td>
-                            <td><input type="text" id="edit-valeur-{{ res.id }}" class="form-control form-control-sm text-center" value="{{ res.valeur }}"></td>
-                            <td><input type="text" id="edit-unite-{{ res.id }}" class="form-control form-control-sm text-center" value="{{ res.unite or '' }}"></td>
-                            <td><input type="text" id="edit-min-{{ res.id }}" class="form-control form-control-sm text-center" value="{{ res.norme_min or '' }}" placeholder="Min"></td>
-                            <td><input type="text" id="edit-max-{{ res.id }}" class="form-control form-control-sm text-center" value="{{ res.norme_max or '' }}" placeholder="Max"></td>
-                            <td colspan="2" class="text-center">
-                                <button class="btn btn-sm btn-success rounded-pill me-1" onclick="saveResult({{ res.id }})" title="Enregistrer">
-                                    <i class="fas fa-check me-1"></i>Enregistrer
-                                </button>
-                                <button class="btn btn-sm btn-secondary rounded-pill" onclick="cancelEdit({{ res.id }})" title="Annuler">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <!-- Message si aucun résultat -->
-                <div class="alert alert-info text-center d-flex align-items-center justify-content-center no-print">
-                    <i class="fas fa-info-circle me-2"></i> 
-                    <span>Aucun résultat détaillé n'a été saisi pour cette analyse.</span>
-                    <button class="btn btn-sm btn-outline-primary ms-3" data-bs-toggle="collapse" href="#addResultForm" role="button">
-                        <i class="fas fa-plus me-1"></i> Ajouter le premier résultat
-                    </button>
-                </div>
-                {% endif %}
-            </div>
+        <div class="flex items-center gap-2 flex-wrap">
+            {% if analyse.statut != 'Terminé' %}
+            <form action="/api/analyses/valider/{{ analyse.id }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                <button type="submit" class="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors shadow-sm">
+                    ✓ Valider l'analyse
+                </button>
+            </form>
+            {% endif %}
+            
+            <a href="/analyse/{{ analyse.id }}/pdf" class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors shadow-sm">
+                📄 PDF
+            </a>
+            <button onclick="window.print()" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors">
+                🖨️ Imprimer
+            </button>
+            <a href="/" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors">
+                ← Retour
+            </a>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Fonctions pour Modifier/Supprimer un résultat existant
-        function editRow(id) {
-            document.getElementById('view-' + id).style.display = 'none';
-            document.getElementById('edit-' + id).style.display = '';
-        }
+    <!-- Carte Info Patient + Statut -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <div class="flex items-start justify-between mb-4">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Patient</p>
+                <p class="text-lg font-bold text-slate-900">{{ analyse.patient.nom }} {{ analyse.patient.prenom }}</p>
+            </div>
+            {% if analyse.statut == 'Terminé' %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">Terminé</span>
+            {% else %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">En cours</span>
+            {% endif %}
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div><span class="text-slate-500">Type :</span> <span class="font-medium text-slate-900">{{ analyse.type_analyse }}</span></div>
+            <div><span class="text-slate-500">Âge :</span> <span class="font-medium text-slate-900">{{ analyse.patient.age or '-' }} ans</span></div>
+            <div><span class="text-slate-500">Sexe :</span> <span class="font-medium text-slate-900">{{ analyse.patient.sexe or '-' }}</span></div>
+            <div><span class="text-slate-500">Tél :</span> <span class="font-medium text-slate-900">{{ analyse.patient.telephone or '-' }}</span></div>
+        </div>
+    </div>
 
-        function cancelEdit(id) {
-            document.getElementById('edit-' + id).style.display = 'none';
-            document.getElementById('view-' + id).style.display = '';
-        }
+    <!-- Résultats Biologiques -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <h2 class="font-semibold text-slate-900">Résultats Biologiques</h2>
+            <button @click="addResultOpen = !addResultOpen" 
+                    class="no-print px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 transition-colors">
+                + Ajouter un résultat
+            </button>
+        </div>
 
-        async function saveResult(id) {
-            const formData = new URLSearchParams();
-            formData.append('nom_test', document.getElementById('edit-nom-' + id).value);
-            formData.append('valeur', document.getElementById('edit-valeur-' + id).value);
-            formData.append('unite', document.getElementById('edit-unite-' + id).value);
-            formData.append('norme_min', document.getElementById('edit-min-' + id).value);
-            formData.append('norme_max', document.getElementById('edit-max-' + id).value);
+        <!-- Formulaire Ajout (Alpine.js toggle) -->
+        <div x-show="addResultOpen" x-collapse class="no-print bg-slate-50 border-b border-slate-200 p-4">
+            <form action="/api/analyses/analyse/{{ analyse.id }}/add-result" method="POST" class="grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-medium text-slate-700 mb-1">Nom du test</label>
+                    <input type="text" name="nom_test" required placeholder="ex: Glycémie" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">Valeur</label>
+                    <input type="text" name="valeur" required placeholder="0.90" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">Unité</label>
+                    <input type="text" name="unite" placeholder="g/L" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">Min</label>
+                    <input type="text" name="norme_min" placeholder="Min" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">Max</label>
+                    <input type="text" name="norme_max" placeholder="Max" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div class="md:col-span-6 flex gap-2 pt-2">
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">Enregistrer</button>
+                    <button type="button" @click="addResultOpen = false" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50">Annuler</button>
+                </div>
+            </form>
+        </div>
 
-            try {
-                const response = await fetch('/api/analyses/resultats/' + id + '/update', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                    body: formData
-                });
-                if (response.ok) {
-                    window.location.reload();
-                } else {
-                    alert('Erreur lors de la mise à jour.');
-                }
-            } catch (error) {
-                alert('Erreur de connexion.');
-            }
-        }
+        <!-- Tableau des Résultats -->
+        {% if analyse.resultats %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-3 font-semibold">Test</th>
+                        <th class="px-6 py-3 font-semibold text-center">Résultat</th>
+                        <th class="px-6 py-3 font-semibold text-center">Unité</th>
+                        <th class="px-6 py-3 font-semibold text-center">Normes</th>
+                        <th class="px-6 py-3 font-semibold text-center">Statut</th>
+                        <th class="px-6 py-3 font-semibold text-center no-print">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for res in analyse.resultats %}
+                    {% set val = res.valeur|float %}
+                    {% set min = res.norme_min|float if res.norme_min else None %}
+                    {% set max = res.norme_max|float if res.norme_max else None %}
+                    
+                    <!-- Ligne Vue -->
+                    <tr x-data="{ editing: false }" class="hover:bg-slate-50/80 transition-colors">
+                        <!-- MODE VUE -->
+                        <template x-if="!editing">
+                            <td colspan="6" class="p-0">
+                                <div class="grid grid-cols-[1fr_auto_auto_auto_auto_auto] items-center px-6 py-3">
+                                    <span class="font-medium text-slate-900">{{ res.nom_test }}</span>
+                                    <span class="text-center text-base font-bold {% if min is not none and max is not none and (val < min or val > max) %}text-red-600{% elif min is not none and max is not none %}text-green-600{% else %}text-slate-900{% endif %}">
+                                        {{ res.valeur }}
+                                    </span>
+                                    <span class="text-center text-slate-500 w-16">{{ res.unite or '-' }}</span>
+                                    <span class="text-center text-slate-500 w-24">
+                                        {% if min is not none and max is not none %}{{ res.norme_min }} – {{ res.norme_max }}{% else %}-{% endif %}
+                                    </span>
+                                    <span class="text-center w-24">
+                                        {% if min is not none and max is not none %}
+                                            {% if val < min or val > max %}
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700">Hors norme</span>
+                                            {% else %}
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700">Normal</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-slate-400 text-xs">-</span>
+                                        {% endif %}
+                                    </span>
+                                    <span class="text-center w-20 no-print space-x-1">
+                                        <button @click="editing = true" class="text-blue-600 hover:text-blue-800 text-xs font-medium px-2 py-1 rounded hover:bg-blue-50">Modifier</button>
+                                        <form action="/api/analyses/resultats/{{ res.id }}/delete" method="POST" class="inline" onsubmit="return confirm('Supprimer ce résultat ?');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                                            <button type="submit" class="text-red-500 hover:text-red-700 text-xs font-medium px-2 py-1 rounded hover:bg-red-50">Suppr.</button>
+                                        </form>
+                                    </span>
+                                </div>
+                            </td>
+                        </template>
 
-        async function deleteResult(id) {
-            if (!confirm('Supprimer ce résultat ?')) return;
-            try {
-                const response = await fetch('/api/analyses/resultats/' + id + '/delete', { method: 'POST' });
-                if (response.ok) {
-                    window.location.reload();
-                } else {
-                    alert('Erreur lors de la suppression.');
-                }
-            } catch (error) {
-                alert('Erreur de connexion.');
-            }
-        }
-    </script>
-</body>
-</html>
+                        <!-- MODE ÉDITION (Inline) -->
+                        <template x-if="editing">
+                            <td colspan="6" class="p-0 bg-slate-50">
+                                <form action="/api/analyses/resultats/{{ res.id }}/update" method="POST" class="grid grid-cols-[1fr_auto_auto_auto_auto_auto] items-center px-6 py-2 gap-2">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                                    <input name="nom_test" value="{{ res.nom_test }}" required class="px-2 py-1 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                    <input name="valeur" value="{{ res.valeur }}" required class="px-2 py-1 border border-slate-300 rounded text-sm text-center w-20 focus:ring-2 focus:ring-blue-500 outline-none">
+                                    <input name="unite" value="{{ res.unite or '' }}" class="px-2 py-1 border border-slate-300 rounded text-sm text-center w-16 focus:ring-2 focus:ring-blue-500 outline-none">
+                                    <div class="flex gap-1 w-24">
+                                        <input name="norme_min" value="{{ res.norme_min or '' }}" placeholder="Min" class="px-1 py-1 border border-slate-300 rounded text-xs text-center w-12 focus:ring-2 focus:ring-blue-500 outline-none">
+                                        <input name="norme_max" value="{{ res.norme_max or '' }}" placeholder="Max" class="px-1 py-1 border border-slate-300 rounded text-xs text-center w-12 focus:ring-2 focus:ring-blue-500 outline-none">
+                                    </div>
+                                    <span class="w-24"></span>
+                                    <span class="text-center w-20 no-print space-x-1">
+                                        <button type="submit" class="text-green-600 hover:text-green-800 text-xs font-medium px-2 py-1 rounded hover:bg-green-50">✓</button>
+                                        <button type="button" @click="editing = false" class="text-slate-500 hover:text-slate-700 text-xs font-medium px-2 py-1 rounded hover:bg-slate-100">✕</button>
+                                    </span>
+                                </form>
+                            </td>
+                        </template>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="px-6 py-12 text-center text-slate-400 no-print">
+            <p class="mb-3">Aucun résultat détaillé n'a été saisi pour cette analyse.</p>
+            <button @click="addResultOpen = true" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                + Ajouter le premier résultat
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Styles d'impression -->
+<style>
+@media print {
+    .no-print { display: none !important; }
+    body { background: white !important; }
+    aside, nav { display: none !important; }
+    main { margin: 0 !important; padding: 0 !important; }
+    .shadow-sm { box-shadow: none !important; }
+    .border { border-color: #e2e8f0 !important; }
+}
+</style>
+{% endblock %}
