@@ -141,11 +141,27 @@ def reset_password_page(request: Request):
     return templates.TemplateResponse("reset_password.html", {"request": request})
 
 @app.get("/patients")
-def patients_page(request: Request, current_user: models.UserDB = Depends(get_current_user)):
+def patients_page(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: models.UserDB = Depends(get_current_user)
+):
     if current_user.is_admin:
         return RedirectResponse(url="/admin", status_code=302)
-    return templates.TemplateResponse("patients.html", {"request": request})
 
+    patients_list = (
+        db.query(models.Patient)
+        .filter(models.Patient.labo_id == current_user.labo_id)
+        .order_by(models.Patient.nom.asc(), models.Patient.prenom.asc())
+        .all()
+    )
+
+    return templates.TemplateResponse("patients.html", {
+        "request": request,
+        "patients": patients_list,
+        "success": request.query_params.get("success"),
+        "error": request.query_params.get("error"),
+    })
 @app.get("/admin")
 def admin_page(request: Request, current_user: models.UserDB = Depends(get_current_user)):
     if not current_user.is_admin:
