@@ -11,6 +11,7 @@
         .btn-primary { background-color: #0d6efd; border: none; }
         .btn-primary:hover { background-color: #0b5ed7; }
     </style>
+    <meta name="csrf-token" content="{{ csrf_token(request) }}">
 </head>
 <body>
     <div class="card">
@@ -36,6 +37,7 @@
             <form action="/api/auth/login" method="POST">
                 <!-- Page a retrouver apres connexion (ex: /admin) -->
                 <input type="hidden" name="next_url" value="{{ next or '/' }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
                 <div class="mb-3">
                     <label class="form-label">Email Professionnel</label>
                     <!-- Le nom DOIT être 'username' pour OAuth2PasswordRequestForm -->

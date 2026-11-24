@@ -10,6 +10,7 @@
         .navbar { background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
     </style>
+    <meta name="csrf-token" content="{{ csrf_token(request) }}">
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light mb-4">
@@ -17,7 +18,10 @@
             <a class="navbar-brand fw-bold text-primary" href="/"><i class="fas fa-heartbeat me-2"></i>MedicLab</a>
             <div class="ms-auto">
                 <a href="/" class="btn btn-outline-secondary btn-sm rounded-pill px-3 me-2"><i class="fas fa-arrow-left me-1"></i> Accueil</a>
-                <a href="/logout" class="btn btn-outline-danger btn-sm rounded-pill px-3">Déconnexion</a>
+                <form action="/logout" method="POST" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">Déconnexion</button>
+                </form>
             </div>
         </div>
     </nav>
@@ -50,6 +54,7 @@
             <div class="card-body p-4">
                 <h5 class="card-title mb-3"><i class="fas fa-user-plus me-2 text-primary"></i>Ajouter un Patient</h5>
                 <form action="/api/patients/create" method="POST" class="row g-3">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
                     <div class="col-md-3">
                         <input type="text" name="nom" class="form-control" placeholder="Nom" required>
                     </div>
@@ -120,6 +125,7 @@
                 <td>${p.telephone || '-'}</td>
                 <td class="text-end pe-4">
                     <form action="/api/patients/${p.id}/delete" method="POST" class="d-inline" onsubmit="return confirm('Supprimer ce patient ?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
                         <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">
                             <i class="fas fa-trash me-1"></i>Supprimer
                         </button>

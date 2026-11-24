@@ -19,6 +19,7 @@ from io import BytesIO
 from .database import engine, Base, get_db, SessionLocal
 from .routers import analyses, auth, patients, admin
 from .auth import get_current_user, get_password_hash, COOKIE_SECURE
+from .csrf import CsrfCookieMiddleware, jeton_depuis_requete, verifier_csrf
 from .schema_repair import reparer_schema
 from . import models
 
@@ -35,8 +36,9 @@ def verifier_configuration():
 
 verifier_configuration()
 
-app = FastAPI(title="API Analyse Médicale SaaS")
+app = FastAPI(title="API Analyse Médicale SaaS", dependencies=[Depends(verifier_csrf)])
 templates = Jinja2Templates(directory="templates")
+templates.env.globals["csrf_token"] = jeton_depuis_requete
 
 app.include_router(analyses.router)
 app.include_router(auth.router)
@@ -52,6 +54,7 @@ class NoCacheMiddleware(BaseHTTPMiddleware):
         return response
 
 app.add_middleware(NoCacheMiddleware)
+app.add_middleware(CsrfCookieMiddleware)
 
 def creer_admin_par_defaut():
     admin_email = os.getenv("ADMIN_EMAIL")
@@ -229,7 +232,7 @@ def read_root(request: Request, db: Session = Depends(get_db), current_user: mod
         "analyses_terminees": analyses_terminees
     })
 
-@app.get("/logout")
+@app.post("/logout")
 def logout(request: Request):
     response = RedirectResponse(url="/login", status_code=302)
     response.delete_cookie(key="access_token", path="/", samesite="lax", secure=COOKIE_SECURE)
