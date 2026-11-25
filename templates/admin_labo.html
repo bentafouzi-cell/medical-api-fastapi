@@ -87,7 +87,10 @@
                 <a href="/admin" class="btn btn-ghost btn-sm rounded-3 px-3">
                     <i class="fas fa-arrow-left me-1"></i>Laboratoires
                 </a>
-                <a href="/logout" class="btn btn-ghost btn-sm rounded-3 px-3 text-danger">Déconnexion</a>
+                <form action="/logout" method="POST" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                    <button type="submit" class="btn btn-ghost btn-sm rounded-3 px-3 text-danger">Déconnexion</button>
+                </form>
             </div>
         </div>
     </nav>
